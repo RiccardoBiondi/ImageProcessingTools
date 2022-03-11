@@ -1,0 +1,20 @@
+name : ipt
+
+channels :
+  - default
+  - conda-forge
+  - anaconda
+
+dependencies :
+  - python=3.8
+  - pip
+  - itk=5.1.0
+  - numpy
+  - matplotlib
+  - pandas
+  - scipy
+  - seaborn
+  - jupyter
+  - ipython
+  - pytest
+  - hypothesis=6.0.0

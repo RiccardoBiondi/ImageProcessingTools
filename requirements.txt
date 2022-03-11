@@ -1,0 +1,8 @@
+itk==5.1.0
+numpy
+matplotlib
+pandas
+scipy
+seaborn
+pytest
+hypothesis==6.0.0
