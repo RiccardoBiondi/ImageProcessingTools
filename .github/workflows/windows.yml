@@ -16,25 +16,26 @@ jobs:
          cfg:
           - {os: windows-latest}
           - {os: windows-2016}
+          python-version: [3.5, 3.6, 3.7, 3.8, 3.9, 3.10]
+            
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
       with:
         submodules: recursive
 
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'
+        python-version:  ${{ matrix.python-version }}
         architecture: 'x64'
 
-    - name: Add conda to system path
+    - name: Update Conda Environment
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-    - name: Install dependencies
+       $CONDA/bin/conda env create --file environment.yml
+    - name: activate the environment
       run: |
-        conda env update --file environment.yml --name base
+         $CONDA/bin/conda activate ipt
         
     - name: Install Image Processing Tools
       run: |
