@@ -1,0 +1,5 @@
+.pytest_cache
+.hypothesis
+test/__pycache__
+IPT/__pycache__
+Image_Processing_Tools.egg-info
