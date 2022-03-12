@@ -28,9 +28,10 @@ jobs:
         python-version:  ${{ matrix.python-version }}
         auto-update-conda: true
 
+
     - name: Create Conda Environment
       run: |
-        conda env create --file environment.yml
+        conda env create --file environment.yaml
     - name: Activate ipt environment
       run: |
          conda activate ipt
