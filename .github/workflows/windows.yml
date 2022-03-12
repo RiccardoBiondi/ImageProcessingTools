@@ -9,14 +9,12 @@ on:
 
 jobs:
   build:
-    runs-on: ${{matrix.cfg.os}}
-    name: $${matrix.cfg.os}}
+    runs-on: ${{matrix.cfg}}
+    name: ${{matrix.cfg}}
     strategy:
       matrix:
-         cfg:
-          - {os: windows-latest}
-          - {os: windows-2016}
-          python-version: [3.5, 3.6, 3.7, 3.8, 3.9, 3.10]
+         cfg: [windows-latest, windows-2016]
+         python-version: [3.5, 3.6, 3.7, 3.8, 3.9, 3.10]
             
     steps:
     - name: Checkout
