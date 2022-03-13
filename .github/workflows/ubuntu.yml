@@ -1,0 +1,44 @@
+name: Ubuntu CI
+
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ${{matrix.cfg}}
+    name: ${{matrix.cfg}}
+    strategy:
+      matrix:
+         cfg: [ubuntu-latest]
+         python-version: [3.8, 3.9]
+            
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Set up Miniconda and Python
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        python-version:  ${{ matrix.python-version }}
+        auto-update-conda: true
+
+
+    - name: Create Conda Environment
+      run: |
+        conda env create --file environment.yaml
+    - name: Activate ipt environment
+      run: |
+         conda activate ipt
+        
+    - name: Install Image Processing Tools
+      run: |
+        python setup.py develop --user
+    - name: Test with pytest
+      run: |
+            python -m pytest
