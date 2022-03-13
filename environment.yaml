@@ -8,7 +8,7 @@ channels :
 dependencies :
   - python=3.8
   - pip
-  - itk=5.1.0
+  - itk
   - numpy
   - matplotlib
   - pandas
@@ -17,4 +17,4 @@ dependencies :
   - jupyter
   - ipython
   - pytest
-  - hypothesis=6.0.0
+  - hypothesis 
