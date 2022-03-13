@@ -11,13 +11,37 @@ __all__ = ['update', 'slice_by_slice', 'timing']
 def update(func):
     """
     Decorator to automatically update an itk pipeline. The pipeline must be
-    initlaized qith the input/s images as *args and other as kwargs.
+    initlaized with the input/s images as *args and other as kwargs.
     The pipeline must return an itk filter, not an image.
 
-    To deactivate the usage of the deocrator, simply specify: upadte=False
+    To deactivate the usage of the decorator, simply specify: upadte=False
     as kwargs in the function.
+
+    Example
+    -------
+    >>> import itk
+    >>> from ipt.decorators import update
+    >>>
+    >>> # Create a decorated function containing the pipeline to update
+    >>>
+    >>> @update
+    >>> def pipeline(image, radius=1, **kwargs):
+    >>>   median_filter = itk.MedianImageFilter[type(image), type(image)].New()
+    >>>   _ = median_filter.SetInput(image)
+    >>>   _ = median_filter.SetRadius(radius)
+    >>>
+    >>>   return median_filter
+    >>>
+    >>> def main():
+    >>>
+    >>>   image = itk.imread('path/to/input/image')
+    >>>   filtered = median_filter(image)
+    >>>   _ = itk.imwrite('path/to/output', filtered.GetOutput())
+    >>>
+    >>> if __name__ == '__main__':
+    >>>   main()
     """
-    @functools.wrap(func)
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
 
         pipeline = func(*args, **kwargs)
@@ -46,6 +70,7 @@ def timing(func):
     be executed before perform the timing(TODO find a better expression)
     """
     logging.debug(f'Timing for {func.__name__}')
+
     @functools.wrap(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
