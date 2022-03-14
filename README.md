@@ -1,6 +1,6 @@
 | **Authors**  | **Project** |  **Build Status** | **License** | **Code Quality** | **Coverage** |
 |:------------:|:-----------:|:-----------------:|:-----------:|:----------------:|:------------:|
-|**R. Biondi** |**IPT**      |                   |             |                  |              |
+|**R. Biondi** |**IPT**      | **Windows** : [![Windows CI](https://github.com/RiccardoBiondi/ImageProcessingTools/workflows/Windows%20CI/badge.svg)](https://github.com/RiccardoBiondi/ImageProcessingTools/actions/workflows/windows.yml)    <br/> **Ubuntu** : [![Ubuntu CI](https://github.com/RiccardoBiondi/ImageProcessingTools/workflows/Ubuntu%20CI/badge.svg)](https://github.com/RiccardoBiondi/ImageProcessingTools/actions/workflows/ubuntu.yml)            |      [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/RiccardoBiondi/ImageProcessingTools/blob/master/LICENSE.md)       |                  |              |
 
 Put here all the required badges
 

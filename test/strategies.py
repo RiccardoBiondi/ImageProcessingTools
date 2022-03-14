@@ -18,7 +18,7 @@ text_strategy = st.text(alphabet=legitimate_chars, min_size=1,
                         max_size=15)
 
 medical_image_format = ['nrrd', 'nii']
-pixel_types = [itk.UC, itk.SS, itk.F]
+pixel_types = [itk.UC, itk.SS]
 
 
 @st.composite
