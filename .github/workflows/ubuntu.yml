@@ -9,11 +9,10 @@ on:
 
 jobs:
   build:
-    runs-on: ${{matrix.cfg}}
-    name: ${{matrix.cfg}}
+    runs-on: ubuntu-latest
+    name: ubuntu-latest
     strategy:
       matrix:
-         cfg: [ubuntu-latest]
          python-version: [3.8, 3.9]
             
     steps:
@@ -21,24 +20,22 @@ jobs:
       uses: actions/checkout@v2
       with:
         submodules: recursive
-
-    - name: Set up Miniconda and Python
-      uses: conda-incubator/setup-miniconda@v2
+    - name: Set Up Python
+      uses: actions/setup-python@v2
       with:
-        python-version:  ${{ matrix.python-version }}
-        auto-update-conda: true
-
+        python-version: ${matrix.python-version}
 
     - name: Create Conda Environment
       run: |
-        conda env create --file environment.yaml
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        $CONDA/bin/conda env update --file environment.yml --name base
     - name: Activate ipt environment
       run: |
-         conda activate ipt
+         $CONDA/bin/conda activate ipt
         
     - name: Install Image Processing Tools
       run: |
-        python setup.py develop --user
+        $CONDA/bin/python setup.py develop --user
     - name: Test with pytest
       run: |
-            python -m pytest
+            $CONDA/bin/python -m pytest
