@@ -9,13 +9,14 @@ from IPT.utils import infer_itk_image_type
 __author__ = ['Riccardo Biondi']
 __email__ = ['riccardo.biondi7@unibo.it']
 
-__all__ = ['itk_add', 'itk_subtract', 'itk_multiply', 'itk_maximum', 'itk_mask',
+__all__ = ['itk_add', 'itk_subtract', 'itk_multiply', 'itk_invert_intensity',
+           'itk_maximum', 'itk_label_statistics', 'itk_shift_scale',
+           'itk_gaussian_normalization', 'itk_mask',
            'itk_salt_and_pepper_noise', 'itk_threshold', 'itk_binary_threshold',
-           'itk_median', 'itk_smoothing_recursive_gaussian',
-           'itk_binary_erode', 'itk_binary_dilate',
-           'itk_binary_morphological_opening',
+           'itk_median', 'itk_smoothing_recursive_gaussian', 'itk_binary_erode',
+           'itk_binary_dilate', 'itk_binary_morphological_opening',
            'itk_binary_morphological_closing', 'itk_connected_components',
-           'itk_relabel_components']
+           'itk_relabel_components', 'itk_extract']
 #
 # Aritmetic Operators
 #
@@ -125,7 +126,7 @@ def itk_multiply(image1, image2, input1_type=None,
     Results
     -------
     multiply_image: itk.MultiplyImageFilter
-        itk.MultiplyImageFilter instance.  As default the instance is updated.
+        itk.MultiplyImageFilter instance. As default the instance is updated.
         To not update the instance pecify update=False as kwargs.
     '''
     logging.debug('Multiply two Images')
@@ -143,6 +144,45 @@ def itk_multiply(image1, image2, input1_type=None,
 #
 # Logic Operations
 #
+
+
+@update
+def itk_invert_intensity(image, maximum=1,
+                         input_type=None, output_type=None, **kwargs):
+    '''
+    Invert the intensity of an image.
+    InvertIntensityImageFilter inverts intensity of pixels by subtracting pixel
+    value to a maximum value
+
+    Parameters
+    ----------
+    image: itk.Image
+        image to invert
+    maximum: int
+        maximum value
+    input_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+         input image type. If not specified it is inferred from the input image
+    output_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+         output image type. If not specified it is iferred from the input image
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Result
+    ------
+    inverter: itk.InvertIntensityImageFilter
+        itk.InvertIntensityImageFilter instance. As default the instance is
+        updated. To not update the instance pecify update=False as kwargs.
+    '''
+    logging.debug(f'Invert Intensity: -maximum: {maximum}')
+
+    InputType = infer_itk_image_type(image, input_type)
+    OutputType = infer_itk_image_type(image, output_type)
+
+    inverter = itk.InvertIntensityImageFilter[InputType, OutputType].New()
+    _ = inverter.SetInput(image)
+    _ = inverter.SetMaximum(maximum)
+
+    return inverter
 
 
 #
@@ -194,9 +234,120 @@ def itk_maximum(image1, image2,
 
     return max_
 
+
+@update
+def itk_label_statistics(image, labelmap, input_type=None, **kwargs):
+    '''
+    Given an intensity image and a label map, compute min, max, variance and
+    mean of the pixels associated with each label or segment.
+
+    Parameters
+    ----------
+    image: itk.Image
+        intensity image
+    labelmap: itk.LabelMap
+        label map
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    filter_ : itk.LabelStatisticsImageFilter
+        itk.LabelStatisticsImageFilter instance. As default the instance is
+        updated. To not update the instance pecify update=False as kwargs.
+    '''
+
+    logging.debug('Computing Lebel Statistics')
+    InputType = infer_itk_image_type(image, input_type)
+
+    # TODO Improve the type definition for the labelmap object
+    filter_ = itk.LabelStatisticsImageFilter[InputType, type(labelmap)].New()
+    _ = filter_.SetLabelInput(labelmap)
+    _ = filter_.SetInput(image)
+
+    return filter_
+
+
+@update
+def itk_shift_scale(image, shift=0., scale=1.,
+                    input_type=None, output_type=None, **kwargs):
+    '''
+    Shift and scale the pixels in an image.
+
+    Parameters
+    ----------
+    image: itk.Image
+        image to apply filter to
+    shift: float
+        shift factor
+    scale: float
+        scale factor
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    filter_ : itk.ShiftScaleImageFilter
+        itk.ShiftScaleImageFilter instance. As default the instance is
+        updated. To not update the instance pecify update=False as kwargs.
+    '''
+    logging.debug(f'Shift and Scale: -shift: {shift} -scale: {scale}')
+
+    InputType = infer_itk_image_type(image, input_type)
+    OutputType = infer_itk_image_type(image, output_type)
+
+    filter_ = itk.ShiftScaleImageFilter[InputType, OutputType].New()
+    _ = filter_.SetInput(image)
+    _ = filter_.SetScale(scale)
+    _ = filter_.SetShift(shift)
+
+    return filter_
+
+
+@update
+def itk_gaussian_normalization(image, mask, label=1,
+                               input_type=None, output_type=None, **kwargs):
+    '''
+    Normalize the datata according to mean and standard deviation of the
+    voxels inside the specified mask image
+
+    Parameters
+    ----------
+    image: itk.Image
+        image to normalize
+    mask: itk.Image
+        ROI mask
+    label: int
+        label value to determine the ROI
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    '''
+
+    # TODO imporve documentation
+    logging.debug(f'Running Gaussian Normalization. ROI label={label}')
+
+    stats = itk_label_statistics(image, mask,
+                                 input_type, update=kwargs.get('update', True))
+
+    # TODO add standard values for the case in which the label filter is not
+    # updated?? mbah
+    shift = -stats.GetMean(label)
+    scale = 1. / abs(stats.GetSigma(label))
+
+    normalized = itk_shift_scale(image, shift=shift, scale=scale,
+                                 input_type=input_type,
+                                 output_type=output_type,
+                                 update=kwargs.get('update', True))
+
+    return normalized
+
 #
 # Image Functions
 #
+
 
 @update
 def itk_mask(image, mask, masking_value=0, outside_value=0,
@@ -435,10 +586,10 @@ def itk_smoothing_recursive_gaussian(image,
     _ = smooth.SetNormalizeAcrossScale(normalize_across_scale)
 
     return smooth
-
 #
 # Binary Images
 #
+
 
 @update
 def itk_salt_and_pepper_noise(image, salt_value=1, pepper_value=0, prob=.05,
@@ -689,11 +840,10 @@ def itk_binary_morphological_closing(image, radius=1, foreground_value=1,
     closing.SetForegroundValue(foreground_value)  # Intensity value to erode
 
     return closing
-
-
 #
 # Labelling
 #
+
 
 @update
 def itk_connected_components(image, fully_connected=False, background_value=0,
@@ -726,9 +876,7 @@ def itk_connected_components(image, fully_connected=False, background_value=0,
         updated. To not update the instance pecify update=False as kwargs.
     '''
 
-    logging.debug('Computing Connected Components: \
-                - fully_connected: {}\
-                - background_value: {}'.format(fully_connected, background_value))
+    logging.debug(f'Computing Connected Components: - fully_connected: {fully_connected} - background_value: {background_value}')
 
     InputType = infer_itk_image_type(image, input_type)
     OutputType = infer_itk_image_type(image, output_type)
@@ -794,3 +942,49 @@ def itk_relabel_components(image,
     #    _ = relabeler.SetNumberOfObjectsToPrint(number_of_object_to_print)
 
     return relabeler
+
+#
+# Region Extraction
+#
+
+
+@update
+def itk_extract(image, region, collapse2submatrix=False,
+                input_type=None, output_type=None):
+    '''
+    Decrease the image size by cropping the image to the selected region bounds
+
+    Parameters
+    ----------
+    image: itk.Image
+        image to crop
+    region: itk.ImageRegion
+        cropping region
+    collapse2submatrix: bool
+
+    input_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+         input image type. If not specified it is inferred from the input image
+    output_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+         output image type. If not specified it is iferred from the input image
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    filter_ : itk.ExtractImageFilter
+        itk.ExtractImageFilter instance. As default the instance is updated.
+        To not update the instance pecify update=False as kwargs.
+    '''
+    # TODO add all the other input options
+    InputType = infer_itk_image_type(image, input_type)
+    OutputType = infer_itk_image_type(image, output_type)
+
+    filter_ = itk.ExtractImageFilter[InputType, OutputType].New()
+
+    if collapse2submatrix:
+        _ = filter_.SetDirectionCollapseToSubmatrix()
+
+    _ = filter_.SetInput(image)
+    _ = filter_.SetExtractionRegion(region)
+
+    return filter_

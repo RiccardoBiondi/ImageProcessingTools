@@ -14,7 +14,11 @@ from IPT.utils import itk_constant_image_from_reference
 from IPT.itk_wrapping import itk_add
 from IPT.itk_wrapping import itk_subtract
 from IPT.itk_wrapping import itk_multiply
+from IPT.itk_wrapping import itk_invert_intensity
 from IPT.itk_wrapping import itk_maximum
+from IPT.itk_wrapping import itk_label_statistics
+from IPT.itk_wrapping import itk_shift_scale
+from IPT.itk_wrapping import itk_gaussian_normalization
 from IPT.itk_wrapping import itk_binary_threshold
 from IPT.itk_wrapping import itk_threshold
 from IPT.itk_wrapping import itk_mask
@@ -27,6 +31,7 @@ from IPT.itk_wrapping import itk_binary_morphological_opening
 from IPT.itk_wrapping import itk_binary_morphological_closing
 from IPT.itk_wrapping import itk_connected_components
 from IPT.itk_wrapping import itk_relabel_components
+from IPT.itk_wrapping import itk_extract
 
 
 __author__ = ['Riccardo Biondi']
@@ -115,6 +120,70 @@ def test_multiply_two_images(image, const1, const2):
     assert np.unique(res) == [gt]
 
 
+@given(cst.random_image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_invert_intensity_default(image):
+    '''
+    Given:
+        - random image
+    Then:
+        - default filter instantiation
+    Assert:
+        Correct paramenters init
+    '''
+
+    inverter = itk_invert_intensity(image)
+
+    assert inverter.GetMaximum() == 1
+
+
+@given(cst.random_image_strategy(), st.integers(1, 15))
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_invert_intensity_init(image, maximum):
+    '''
+    Given:
+        - random image
+        - maximum value
+    Then:
+        - filter instantiation
+    Assert:
+        - Correct paramenters init
+    '''
+
+    inverter = itk_invert_intensity(image, maximum)
+
+    assert inverter.GetMaximum() == maximum
+
+
+@given(cst.random_image_strategy(), st.integers(0, 5), st.integers(5, 15))
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_invert_intensity(image, value, maximum):
+    '''
+    Given:
+        - constan image
+        - maximum value
+    Then:
+        - filter instantiation
+        - filter execution
+    Assert:
+        - Correct filter result
+
+    '''
+
+    const = itk_constant_image_from_reference(image, value)
+    inverter = itk_invert_intensity(const, maximum)
+    _ = inverter.Update()
+
+    res = itk.GetArrayFromImage(inverter.GetOutput())
+
+    gt = [maximum - value]
+
+    assert np.unique(res) == gt
+
+
 @given(cst.random_image_strategy(), st.integers(15, 30), st.integers(25, 45))
 @settings(max_examples=20, deadline=None,
           suppress_health_check=(HC.too_slow, ))
@@ -138,6 +207,141 @@ def test_maximum(image, const1, const2):
     res = itk.GetArrayFromImage(max_.GetOutput())
 
     assert np.unique(res) == [max(const1, const2)]
+
+
+@given(cst.random_image_strategy(), st.integers(12, 25), st.integers(50, 75))
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_label_statistics(image, lower, upper):
+    '''
+    Given:
+        - itk random image
+        - upper and lower threshold
+    Then:
+        - compute a mask
+        - compute stats inside the mask
+    Assert:
+        - correct stats computation (using as reference numpy functions)
+    '''
+
+    # compute the mask
+    mask = itk_binary_threshold(image, upper_thr=upper, lower_thr=lower)
+# compute the stats
+    stats = itk_label_statistics(image, mask.GetOutput())
+    #
+    # Compute the reference stats
+    #
+
+    mask_a = itk.GetArrayFromImage(mask.GetOutput())
+    image_a = itk.GetArrayFromImage(image)
+
+    assert np.isclose(stats.GetMean(1), np.mean(image_a[mask_a==1]), atol=1e-3)
+    assert np.isclose(stats.GetMaximum(1), np.max(image_a[mask_a==1]), atol=1e-3)
+    assert np.isclose(stats.GetMinimum(1), np.min(image_a[mask_a==1]), atol=1e-3)
+    assert np.isclose(stats.GetSigma(1), np.std(image_a[mask_a==1]), atol=1e-3)
+
+
+@given(cst.random_image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_shift_scale_default(image):
+    '''
+    Given:
+        - itk Image
+    Then:
+        - init filter
+    Assert:
+        - correct initialization with default parameters
+    '''
+    filter_ = itk_shift_scale(image)
+
+    assert np.isclose(filter_.GetShift(), 0.)
+    assert np.isclose(filter_.GetScale(), 1.)
+
+
+@given(cst.random_image_strategy(), st.floats(-4., 4), st.floats(0., 4.))
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_shift_scale_init(image, shift, scale):
+    '''
+    Given:
+        - itk Image
+        - shift value
+        - scale value
+    Then:
+        - init filter
+    Assert:
+        - correct paramenters initialization
+    '''
+
+    filter_ = itk_shift_scale(image, shift=shift, scale=scale)
+
+    assert np.isclose(filter_.GetShift(), shift)
+    assert np.isclose(filter_.GetScale(), scale)
+
+
+@given(cst.random_image_strategy(), st.integers(1, 7),st.floats(-4., 4), st.floats(.1, 4.))
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_shift_scale(image, value, shift, scale):
+    '''
+    Given:
+        - constant image value
+        - shift and scale value
+    Then:
+        - init and update the filter
+    Assert:
+        - correct shift and scaling. Using numpy functions to compute the
+        reference value
+    '''
+
+    gt = (float(value) + shift) * scale
+    const = itk_constant_image_from_reference(image, value)
+    PixelType, dimension = itk.template(const)[1]
+
+    casted = itk.CastImageFilter[itk.Image[PixelType, dimension], itk.Image[itk.F, dimension]].New()
+    _ = casted.SetInput(const)
+
+    filter_ = itk_shift_scale(casted.GetOutput(), shift=shift, scale=scale)
+    _ = filter_.Update()
+
+    res = itk.GetArrayFromImage(filter_.GetOutput())
+    pred = np.unique(res)[0]
+
+    assert np.isclose(pred, gt)
+
+
+@given(cst.random_image_strategy(), st.integers(12, 25), st.integers(50, 75))
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_gaussian_normalization(image, lower, upper):
+    '''
+    Given:
+        - random image
+        - upper and lower threshold
+    Then:
+        - compute mask
+        - gaussian normalization
+    Assert:
+        - zero mean and unitary std deviation inside the masked region
+    '''
+    PixelType, dimension = itk.template(image)[1]
+
+    mask = itk_binary_threshold(image, upper_thr=upper, lower_thr=lower)
+
+    casted = itk.CastImageFilter[itk.Image[PixelType, dimension], itk.Image[itk.F, dimension]].New()
+    _ = casted.SetInput(image)
+
+    normalized = itk_gaussian_normalization(casted.GetOutput(), mask.GetOutput())
+
+    #
+    # Conpute the resulting statistics
+    #
+    stats = itk_label_statistics(normalized.GetOutput(), mask.GetOutput())
+    _ = stats.Update()
+
+    assert np.isclose(stats.GetMean(1), 0.0, atol=1e-3)
+    assert np.isclose(stats.GetSigma(1), 1.0, atol=1e-3)
 
 
 @given(cst.random_image_strategy(), st.integers(12, 25), st.integers(50, 75))
@@ -648,3 +852,37 @@ def test_relabel_components_initialization(image,
     # TODO: Must be fixed in the function implementation
     # assert relabeler.GetMinimumObjectSize() == minimum_object_size
     # assert relabeler.GetNumberOfObjectsToPrint() == number_of_object_to_print
+
+
+@given(cst.random_image_strategy(), st.integers(1, 15), st.integers(25, 50))
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_extract(image, region_index, region_size):
+    '''
+    Given:
+        - Random Image
+        - starting indexes
+        - region size
+    Then:
+        - create the extraction region
+        - init and update the filter
+    Assert:
+        - resuilting image have the deisdered size
+    '''
+
+    _, dimension = itk.template(image)[1]
+
+    index_ = dimension * [region_index]
+    size_ = dimension * [region_size]
+
+    region = itk.ImageRegion[dimension]()
+    _ = region.SetIndex(index_)
+    _ = region.SetSize(size_)
+
+    extract = itk_extract(image, region)
+
+    res = extract.GetOutput().GetLargestPossibleRegion().GetSize()
+
+    res_size = [res[i] for i in range(dimension)]
+
+    assert res_size == size_
