@@ -11,13 +11,26 @@ import strategies as cst  # testing strategies
 
 from IPT.utils import itk_constant_image_from_reference
 
-from IPT.itk_wrapping import *
+from IPT.itk_wrapping import itk_add
+from IPT.itk_wrapping import itk_subtract
+from IPT.itk_wrapping import itk_multiply
+from IPT.itk_wrapping import itk_maximum
+from IPT.itk_wrapping import itk_binary_threshold
+from IPT.itk_wrapping import itk_threshold
+from IPT.itk_wrapping import itk_mask
+from IPT.itk_wrapping import itk_median
+from IPT.itk_wrapping import itk_smoothing_recursive_gaussian
+from IPT.itk_wrapping import itk_salt_and_pepper_noise
+from IPT.itk_wrapping import itk_binary_erode
+from IPT.itk_wrapping import itk_binary_dilate
+from IPT.itk_wrapping import itk_binary_morphological_opening
+from IPT.itk_wrapping import itk_binary_morphological_closing
+from IPT.itk_wrapping import itk_connected_components
+from IPT.itk_wrapping import itk_relabel_components
+
 
 __author__ = ['Riccardo Biondi']
 __email__ = ['riccardo.biondi7@unibo.it']
-
-
-__all__ = ['itk_connected_components', 'itk_relabel_components']
 
 
 @given(cst.random_image_strategy(), st.integers(10, 25), st.integers(30, 45))
@@ -100,6 +113,31 @@ def test_multiply_two_images(image, const1, const2):
     res = itk.GetArrayFromImage(multiply_image.GetOutput())
 
     assert np.unique(res) == [gt]
+
+
+@given(cst.random_image_strategy(), st.integers(15, 30), st.integers(25, 45))
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_maximum(image, const1, const2):
+    '''
+    Given:
+        - itk.Image
+        - two integers constants
+    Then:
+        - instantiate two constant images
+        - compute the maximum
+    Assert:
+        - computed maximum is max(const1, const2)
+    '''
+
+    im1 = itk_constant_image_from_reference(image, const1)
+    im2 = itk_constant_image_from_reference(image, const2)
+
+    max_ = itk_maximum(im1, im2)
+
+    res = itk.GetArrayFromImage(max_.GetOutput())
+
+    assert np.unique(res) == [max(const1, const2)]
 
 
 @given(cst.random_image_strategy(), st.integers(12, 25), st.integers(50, 75))
@@ -331,6 +369,32 @@ def test_median_filter_on_salt_and_pepper(image, radius):
     assert np.unique(res) == [0]
 
 
+
+@given(cst.random_image_strategy(), st.floats(.1, 2.5), st.booleans())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_smoothing_gaussian_initialization(image, sigma,
+                                           normalize_across_scale):
+    '''
+    Given:
+        - itk Image
+        - sigma value
+        - normalize across scale flag
+    Then:
+        - initilize itk_smoothing_recursive_gaussian filter
+    Assert:
+        - correct parameters intialization
+    '''
+
+    filter_ = itk_smoothing_recursive_gaussian(image,
+                                                sigma,
+                                                normalize_across_scale,
+                                                update=False)
+
+    assert filter_.GetSigma() == sigma
+    assert filter_.GetNormalizeAcrossScale() == normalize_across_scale
+
+
 @given(cst.random_image_strategy(),
        st.integers(1, 5),
        st.integers(12, 25),
@@ -500,8 +564,10 @@ def test_itk_binary_morphological_closing_default(image,
 
 @given(cst.random_image_strategy(), st.integers(0, 25), st.booleans())
 @settings(max_examples=20, deadline=None,
-              suppress_health_check=(HC.too_slow, ))
-def test_connected_components_initialization(image, background_value, fully_connected):
+          suppress_health_check=(HC.too_slow, ))
+def test_connected_components_initialization(image,
+                                             background_value,
+                                             fully_connected):
     '''
     Given:
         - random image
@@ -514,9 +580,71 @@ def test_connected_components_initialization(image, background_value, fully_conn
         - correct parameters initialization
     '''
 
-    thr = itk_binary_threshold(image, upper_thr=128, lower_thr=15)
+    _, dimension = itk.template(image)[1]
+
+    thr = itk_binary_threshold(image,
+                               upper_thr=128,
+                               lower_thr=15,
+                               update=False)
+
     connected = itk_connected_components(thr.GetOutput(),
-                                        background_value=background_value,
-                                        fully_connected=fully_connected)
+                                         background_value=background_value,
+                                         fully_connected=fully_connected,
+                                         output_type=itk.Image[itk.UL, 3],
+                                         update=False)
+
     assert connected.GetBackgroundValue() == background_value
     assert connected.GetFullyConnected() == fully_connected
+
+
+@given(cst.random_image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_relabel_components_default(image):
+    '''
+    Given:
+        - random image
+    Then:
+        - instantiate the filter
+    Assert:
+        - correct parameters initialization
+    '''
+
+    relabeler = itk_relabel_components(image, update=False)
+
+    assert relabeler.GetSortByObjectSize() is True
+
+
+@given(cst.random_image_strategy(),
+       st.booleans(),
+       st.integers(1, 5),
+       st.integers(1, 5))
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_relabel_components_initialization(image,
+                                           sort_by_object_size,
+                                           minimum_object_size,
+                                           number_of_object_to_print):
+    '''
+    Given:
+        - random image
+        - sort by size
+        - minimum size
+        - Number of Objects to Print
+    Then:
+        - instantiate the filter
+    Assert:
+        - correct parameters initialization
+    '''
+
+    relabeler = itk_relabel_components(image,
+                                       sort_by_object_size=sort_by_object_size,
+                                       minimum_object_size=np.float(minimum_object_size),
+                                       number_of_object_to_print=number_of_object_to_print,
+                                       update=False)
+
+    assert relabeler.GetSortByObjectSize() is sort_by_object_size
+
+    # TODO: Must be fixed in the function implementation
+    # assert relabeler.GetMinimumObjectSize() == minimum_object_size
+    # assert relabeler.GetNumberOfObjectsToPrint() == number_of_object_to_print

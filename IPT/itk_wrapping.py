@@ -9,13 +9,13 @@ from IPT.utils import infer_itk_image_type
 __author__ = ['Riccardo Biondi']
 __email__ = ['riccardo.biondi7@unibo.it']
 
-__all__ = ['itk_add', 'itk_subtract', 'itk_multiply', 'itk_mask',
+__all__ = ['itk_add', 'itk_subtract', 'itk_multiply', 'itk_maximum', 'itk_mask',
            'itk_salt_and_pepper_noise', 'itk_threshold', 'itk_binary_threshold',
-           'itk_median', 'itk_binary_erode', 'itk_binary_dilate',
+           'itk_median', 'itk_smoothing_recursive_gaussian',
+           'itk_binary_erode', 'itk_binary_dilate',
            'itk_binary_morphological_opening',
            'itk_binary_morphological_closing', 'itk_connected_components',
            'itk_relabel_components']
-
 #
 # Aritmetic Operators
 #
@@ -148,6 +148,51 @@ def itk_multiply(image1, image2, input1_type=None,
 #
 # Algebric Operations
 #
+
+#
+# Statistical Operations
+#
+@update
+def itk_maximum(image1, image2,
+                image1_type=None, image2_type=None, output_type=None,
+                **kwargs):
+    '''
+    Implements a pixel-wise operator Max(a,b) between two images.
+
+    Parameters
+    ----------
+    image1: itk.Image
+      first input image
+    image2: itk.Image
+      second input image
+    image1_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+      input1 image type. If not specified it is inferred from the input image1
+    image2_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+      input2 image type. If not specified it is inferred from the input image2
+    output_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+      output image type. If not specified it is iferred from the input image2
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Returns
+    -------
+    max_ : itk.MaximumImageFilter
+        itk.MaximumImageFilter instance.  As default the instance is updated.
+        To not update the instance pecify update=False as kwargs.
+    '''
+
+    logging.debug('Computing Maximum Between Two Images')
+
+    Input1Type = infer_itk_image_type(image1, image1_type)
+    Input2Type = infer_itk_image_type(image2, image2_type)
+    OutputType = infer_itk_image_type(image1, output_type)
+
+    max_ = itk.MaximumImageFilter[Input1Type, Input2Type, OutputType].New()
+
+    _ = max_.SetInput1(image1)
+    _ = max_.SetInput2(image2)
+
+    return max_
 
 #
 # Image Functions
@@ -346,6 +391,50 @@ def itk_median(image, radius=1, input_type=None, output_type=None, **kwargs):
     _ = median.SetRadius(radius)
 
     return median
+
+
+@update
+def itk_smoothing_recursive_gaussian(image,
+                                     sigma=1.,
+                                     normalize_across_scale=False,
+                                     input_type=None,
+                                     output_type=None,
+                                     **kwargs):
+    '''
+    Computes the smoothing of an image by convolution with the Gaussian kernels
+
+    Parameters
+    ----------
+    image : itk.Image
+        image to smooth
+    sigma : float default : 1.
+        standard deviation of the gaussian kernel
+    normalize_across_scale : bool dafault : False
+        specify if normalize the Gaussian over the scale
+    input_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+         input image type. If not specified it is inferred from the input image
+    output_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+        output image type. If not specified it is iferred from the input image
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    filter : itk.SmoothingRecursiveGaussianImageFilter
+    As default the instance is updated.
+    To not update the instance pecify update=False as kwargs.
+    '''
+    logging.debug(f'Smoothing Recursive Gaussian Filter: -sigma: {sigma} -normalize_across_scale: {normalize_across_scale}')    # Retrive image pixel type and dimension
+
+    InputType = infer_itk_image_type(image, input_type)
+    OutputType = infer_itk_image_type(image, output_type)
+
+    smooth = itk.SmoothingRecursiveGaussianImageFilter[InputType, OutputType].New()
+    _ = smooth.SetInput(image)
+    _ = smooth.SetSigma(sigma)
+    _ = smooth.SetNormalizeAcrossScale(normalize_across_scale)
+
+    return smooth
 
 #
 # Binary Images
