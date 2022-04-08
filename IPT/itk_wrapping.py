@@ -16,7 +16,10 @@ __all__ = ['itk_add', 'itk_subtract', 'itk_multiply', 'itk_invert_intensity',
            'itk_median', 'itk_smoothing_recursive_gaussian', 'itk_binary_erode',
            'itk_binary_dilate', 'itk_binary_morphological_opening',
            'itk_binary_morphological_closing', 'itk_connected_components',
-           'itk_relabel_components', 'itk_extract']
+           'itk_relabel_components', 'itk_extract',
+           'itk_label_overlap_measures', 'itk_hausdorff_distance',
+           'itk_hessian_recursive_gaussian', 'itk_symmetric_eigen_analysis']
+
 #
 # Aritmetic Operators
 #
@@ -988,3 +991,151 @@ def itk_extract(image, region, collapse2submatrix=False,
     _ = filter_.SetExtractionRegion(region)
 
     return filter_
+
+
+#
+# Evaluation
+#
+
+
+@update
+def itk_label_overlap_measures(source, target,
+                               input_type=None, **kwargs):
+    '''
+    Compute overalpping measures between a teaget and a source images. The
+    measures are:
+        - Dice Coefficient
+        - Intersection Over Union
+        - Volume Similarity
+        - Mean Overlap
+        - Union Overlap
+        - False Positive Error
+        - False Negative Error
+    Parameters
+    ----------
+    source: itk.Image
+        source binary image
+    target: itk.Image
+        target binary image
+    input_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+         source and target image type. If not specified it is inferred from the
+         source image
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    measures: itk.LabelOverlapMeasuresImageFilter
+        itk.LabelOverlapMeasuresImageFilter instance. As default the instance
+        is updated. To not update the instance pecify update=False as kwargs.
+    '''
+    InputType = infer_itk_image_type(source, input_type)
+
+    measures = itk.LabelOverlapMeasuresImageFilter[InputType].New()
+    _ = measures.SetSourceImage(source)
+    _ = measures.SetTargetImage(target)
+
+    return measures
+
+
+@update
+def itk_hausdorff_distance(image1, image2,
+                           input1_type=None, input2_type=None, **kwargs):
+    '''
+    '''
+    Input1Type = infer_itk_image_type(image1, input1_type)
+    Input2Type = infer_itk_image_type(image2, input2_type)
+
+    hd = itk.HausdorffDistanceImageFilter[Input1Type, Input2Type].New()
+    _ = hd.SetInput1(image1)
+    _ = hd.SetInput2(image2)
+
+    return hd
+
+
+#
+# Variation and Eigenvalues Based Filters
+#
+
+
+@update
+def itk_hessian_recursive_gaussian(image, sigma=1.,
+                                   normalize_across_scale=False,
+                                   input_type=None, **kwargs):
+    '''
+    Computes the Hessian matrix of an image by convolution with the Second and
+    Cross derivatives of a Gaussian.
+
+    Parameters
+    ----------
+    image : itk.Image
+        image to process
+    sigma : float Default: 1.
+        standard deviation of the gaussian kernel
+    normalize_across_scale : Bool Default: False
+        specify if normalize the Gaussian over the scale
+    input_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+         input image type. If not specified it is inferred from the input image
+
+    Result
+    ------
+    hessian : itk.HessianRecursiveGaussianImageFilter
+        As default the instance is updated. To not update the instance pecify
+        update=False as kwargs.
+    '''
+    logging.debug(f'Hessian Recursive Gaussian Filter: - sigma: {sigma} - normalize_across_scale: {normalize_across_scale}')
+    InputType = infer_itk_image_type(image, input_type)
+
+    hessian = itk.HessianRecursiveGaussianImageFilter[InputType].New()
+    _ = hessian.SetInput(image)
+    _ = hessian.SetSigma(sigma)
+    _ = hessian.SetNormalizeAcrossScale(normalize_across_scale)
+
+    return hessian
+
+
+@update
+def itk_symmetric_eigen_analysis(hessian, dimensions=3,
+                                 order_eigenvalues_by=2, **kwargs):
+    '''
+    omputes the eigen-values of every input symmetric matrix pixel.
+
+    Parameters
+    ----------
+    hessian :
+        hessian matrix from which compute the eigen values
+
+    dimesions: int Default: 3
+
+    order : int Default 2
+        specify the rule to use for sorting the eigenvalues:
+            1 ascending order
+            2 magnitude ascending order
+            3 no order
+    Return
+    ------
+
+    eigen : itk.SymmetricEigenAnalysisImageFilter
+        itk.SymmetricEigenAnalysisImageFilter instance. As default the instance
+        is updated. To not update the instance pecify update=False as kwargs.
+    '''
+    logging.debug(f'Symmetric Eigen Analysis: - dimensions: {dimensions} - order_eigenvalues_by: {order_eigenvalues_by}')
+    # filter declaration and new obj memory allocation (using New)
+
+    eigen = itk.SymmetricEigenAnalysisImageFilter[type(hessian)].New()
+    # seting of the dedidred arguments with the specified ones
+
+    _ = eigen.SetInput(hessian)
+    _ = eigen.SetDimension(dimensions)
+    _ = eigen.OrderEigenValuesBy(order_eigenvalues_by)
+
+    return eigen
+
+
+#
+# Image Orientation
+#
+
+# define forcing orientations
+
+# force orientation

@@ -32,6 +32,11 @@ from IPT.itk_wrapping import itk_binary_morphological_closing
 from IPT.itk_wrapping import itk_connected_components
 from IPT.itk_wrapping import itk_relabel_components
 from IPT.itk_wrapping import itk_extract
+# TODO test me
+from IPT.itk_wrapping import itk_label_overlap_measures
+from IPT.itk_wrapping import itk_hausdorff_distance
+from IPT.itk_wrapping import itk_hessian_recursive_gaussian
+from IPT.itk_wrapping import itk_symmetric_eigen_analysis
 
 
 __author__ = ['Riccardo Biondi']
@@ -886,3 +891,10 @@ def test_extract(image, region_index, region_size):
     res_size = [res[i] for i in range(dimension)]
 
     assert res_size == size_
+
+
+@given(cst.random_image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_itk_label_overlap_measures_defaul(image):
+    pass
