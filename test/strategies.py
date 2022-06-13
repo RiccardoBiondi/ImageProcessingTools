@@ -26,6 +26,9 @@ def random_image_strategy(draw):
     '''
     Generate a White Noise Image
     '''
+
+    # TODO add also a random generation of spatial information:
+    # - direction - origin - spacing
     PixelType = draw(st.sampled_from(pixel_types))
 
     ImageType = itk.Image[PixelType, 3]

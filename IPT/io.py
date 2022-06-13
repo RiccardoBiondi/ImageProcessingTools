@@ -9,6 +9,7 @@ __email__ = ['riccardo.biondi7@unibo.it']
 
 __all__ = ['itk_image_file_reader', 'itk_image_file_writer']
 
+
 @update
 def itk_image_file_reader(filename: str, image_type: itk.Image, **kwargs):
     '''

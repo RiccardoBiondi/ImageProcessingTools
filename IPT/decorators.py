@@ -73,5 +73,6 @@ def timing(func):
 
     @functools.wrap(func)
     def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
+
+        return None
     return wrapper
