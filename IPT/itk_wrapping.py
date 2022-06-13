@@ -18,7 +18,8 @@ __all__ = ['itk_add', 'itk_subtract', 'itk_multiply', 'itk_invert_intensity',
            'itk_binary_morphological_closing', 'itk_connected_components',
            'itk_relabel_components', 'itk_extract',
            'itk_label_overlap_measures', 'itk_hausdorff_distance',
-           'itk_hessian_recursive_gaussian', 'itk_symmetric_eigen_analysis']
+           'itk_hessian_recursive_gaussian', 'itk_symmetric_eigen_analysis',
+           'itk_change_information_from_reference']
 
 #
 # Aritmetic Operators
@@ -346,6 +347,7 @@ def itk_gaussian_normalization(image, mask, label=1,
                                  update=kwargs.get('update', True))
 
     return normalized
+
 
 #
 # Image Functions
@@ -1139,3 +1141,60 @@ def itk_symmetric_eigen_analysis(hessian, dimensions=3,
 # define forcing orientations
 
 # force orientation
+
+
+#
+# Image Physical Infoirmations
+#
+
+@update
+def itk_change_information_from_reference(image,
+                                          reference_image,
+                                          change_direction=True,
+                                          change_origin=True,
+                                          change_spacing=True,
+                                          change_region=True,
+                                          input_type=None, **kwargs):
+    '''
+    Change the origin, spacing, direction and/or buffered region of an itkImage
+    to the one of the specified reference image.
+
+    Parameters
+    ----------
+    image: itk.Image
+        input image
+    reference_image: itk.Image
+        reference image -> will be casted to the same type of input image
+    change_direction: Bool
+        Specify if change input image direction (default: True)
+    change_origin: Bool
+        Specify if change input image origin (default: True)
+    change_spacing: Bool
+        Specify if change input image spacing (default: True)
+    change_region: Bool
+        Specify if change input image region (default: True)
+    input_type : itk.Image type (i.e.itk.Image[itk.UC, 2])
+         input image type. If not specified it is inferred from the input image
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    cahnger: itk.ChangeInformationImageFilter
+        filter is updated by default.
+        To not update the instance pecify update=False as kwargs.
+    '''
+    InputType = infer_itk_image_type(image, input_type)
+    reference_image = itk.CastImageFilter[type(reference_image), InputType].New(reference_image)
+    _ = reference_image.Update()
+    changer = itk.ChangeInformationImageFilter[InputType].New()
+    _ = changer.SetUseReferenceImage(True)
+    _ = changer.SetInput(image)
+    _ = changer.SetReferenceImage(reference_image.GetOutput())
+    _ = changer.SetChangeDirection(change_direction)
+    _ = changer.SetChangeOrigin(change_origin)
+    _ = changer.SetChangeSpacing(change_spacing)
+    _ = changer.SetChangeRegion(change_region)
+    _ = changer.SetCenterImage(False)
+
+    return changer

@@ -32,6 +32,7 @@ from IPT.itk_wrapping import itk_binary_morphological_closing
 from IPT.itk_wrapping import itk_connected_components
 from IPT.itk_wrapping import itk_relabel_components
 from IPT.itk_wrapping import itk_extract
+from IPT.itk_wrapping import itk_change_information_from_reference
 # TODO test me
 from IPT.itk_wrapping import itk_label_overlap_measures
 from IPT.itk_wrapping import itk_hausdorff_distance
@@ -898,3 +899,71 @@ def test_extract(image, region_index, region_size):
           suppress_health_check=(HC.too_slow, ))
 def test_itk_label_overlap_measures_defaul(image):
     pass
+
+
+@given(cst.random_image_strategy(), cst.random_image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_itk_change_information_from_reference_default(image, reference):
+    '''
+    Given:
+        - random input image
+        - random reference image
+    Then:
+        - instantiate itk_change_information_from_reference with
+         default arguments and do not update
+    Assert:
+        - correct filter initialization
+    '''
+
+    filter_ = itk_change_information_from_reference(image, reference, update=False)
+
+    assert filter_.GetChangeDirection() is True
+    assert filter_.GetChangeOrigin() is True
+    assert filter_.GetChangeSpacing() is True
+    assert filter_.GetChangeRegion() is True
+    assert filter_.GetUseReferenceImage() is True
+    assert filter_.GetCenterImage() is False
+
+
+@given(cst.random_image_strategy(), # input image
+       cst.random_image_strategy(), # reference image
+       st.booleans(), # change origin
+       st.booleans(), # change spacing
+       st.booleans(), #change direction
+       st.booleans()# change region
+       )
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_itk_change_information_from_reference_init(image,
+                                                    reference,
+                                                    change_origin,
+                                                    change_spacing,
+                                                    change_direction,
+                                                    change_region):
+    '''
+    Given:
+        - random input image
+        - random reference image
+        - random boolean flags
+    Then:
+        - instantiate itk_change_information_from_reference with
+          custom arguments
+    Assert:
+        - correct filter initialization
+    '''
+
+    filter_ = itk_change_information_from_reference(image,
+                                                    reference,
+                                                    change_origin=change_origin,
+                                                    change_spacing=change_spacing,
+                                                    change_direction=change_direction,
+                                                    change_region=change_region,
+                                                    update=False)
+
+    assert filter_.GetChangeDirection() is change_direction
+    assert filter_.GetChangeOrigin() is change_origin
+    assert filter_.GetChangeSpacing() is change_spacing
+    assert filter_.GetChangeRegion() is change_region
+    assert filter_.GetUseReferenceImage() is True
+    assert filter_.GetCenterImage() is False
