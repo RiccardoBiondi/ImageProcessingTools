@@ -22,17 +22,14 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Create Conda Environment
+    - name: Install Requirements
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        $CONDA/bin/conda env update --file environment.yml --name base
-    - name: Activate ipt environment
-      run: |
-         $CONDA/bin/conda activate ipt
-        
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi 
     - name: Install Image Processing Tools
       run: |
-        $CONDA/bin/python setup.py develop --user
+        python setup.py develop --user
     - name: Test with pytest
       run: |
-            $CONDA/bin/python -m pytest
+            python -m pytest
