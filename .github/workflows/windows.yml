@@ -21,20 +21,16 @@ jobs:
       uses: actions/checkout@v2
       with:
         submodules: recursive
-
-    - name: Set up Miniconda and Python
-      uses: conda-incubator/setup-miniconda@v2
+    - name: Set up python${{matrix.python-version}}
+      uses: actions/setup-python@v2
       with:
-        python-version:  ${{ matrix.python-version }}
-        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
 
-
-    - name: Create Conda Environment
+    - name: Install Dependencies
       run: |
-        conda env create --file environment.yaml
-    - name: Activate ipt environment
-      run: |
-         conda activate ipt
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest
+        python -m pip install -r requirements.txt
         
     - name: Install Image Processing Tools
       run: |
