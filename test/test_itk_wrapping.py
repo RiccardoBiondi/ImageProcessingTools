@@ -436,7 +436,7 @@ def test_threshold_above(image, lower_thr):
 
     out_array = itk.GetArrayFromImage(thr.GetOutput())
 
-    assert np.min(out_array[out_array != 0]) == lower_thr
+    assert np.min(out_array[out_array != 0]) >= lower_thr
 
 
 @given(cst.random_image_strategy(), st.integers(5, 15))
@@ -458,7 +458,7 @@ def test_threshold_below(image, upper_thr):
 
     out_array = itk.GetArrayFromImage(thr.GetOutput())
 
-    assert np.max(out_array[out_array != 0]) == upper_thr
+    assert np.max(out_array[out_array != 0]) <= upper_thr
 
 
 @given(cst.random_image_strategy(), st.integers(5, 15), st.integers(25, 30))
@@ -482,8 +482,8 @@ def test_threshold_outside(image, lower_thr, upper_thr):
 
     out_array = itk.GetArrayFromImage(thr.GetOutput())
 
-    assert np.max(out_array[out_array != 0]) == upper_thr
-    assert np.min(out_array[out_array != 0]) == lower_thr
+    assert np.max(out_array[out_array != 0]) <= upper_thr
+    assert np.min(out_array[out_array != 0]) >= lower_thr
 
 
 @given(cst.random_image_strategy())
