@@ -7,12 +7,12 @@ __author__ = ['Riccardo Biondi']
 __email__ = ['riccardo.biondi7@unibo.it']
 __all__ = ['plt_view', 'plt_image_histogram']
 
+
 def plt_view(image, idx=(0, 0, 0), label=None, cmap='gray',
              l_cmap='cool', contours='red'):
     '''
     '''
-    logging.debug("")
-
+    # first of sll ore the RIS orientation
     if isinstance(image, np.ndarray):
         im = image.copy()
         spacing = (1., 1., 1.)
