@@ -19,7 +19,8 @@ __all__ = ['itk_add', 'itk_subtract', 'itk_multiply', 'itk_invert_intensity',
            'itk_relabel_components', 'itk_extract',
            'itk_label_overlap_measures', 'itk_hausdorff_distance',
            'itk_hessian_recursive_gaussian', 'itk_symmetric_eigen_analysis',
-           'itk_change_information_from_reference']
+           'itk_change_information_from_reference',
+           'itk_voting_binary_iterative_hole_filling']
 
 #
 # Aritmetic Operators
@@ -1198,3 +1199,53 @@ def itk_change_information_from_reference(image,
     _ = changer.SetCenterImage(False)
 
     return changer
+
+
+@update
+def itk_voting_binary_iterative_hole_filling(image,
+                                             radius=1,
+                                             max_number_of_iterations=10,
+                                             majority_threshold=1,
+                                             foreground_value=1,
+                                             background_value=0,
+                                             input_type=None, **kwargs):
+    '''
+    Fills in holes and cavities by iteratively applying a voting operation.
+
+    Parameters
+    ----------
+    image: itk.Image
+        input binary image
+    radius: int or list of int
+        radius of the neighborhood used to compute the median
+    max_number_of_iterations: int
+        maximum number of iterations to perform
+    majority_threshold: int
+        number of pixels over 50% that will decide whether an OFF pixel will
+        become ON or not
+    foreground_value: int
+        value associated with the Foreground(object) of the binary image
+    background_value: int
+        value associated with the Background of the binary image
+    input_type: itk.Image type (i.e.itk.Image[itk.UC, 2])
+         input image type. If not specified it is inferred from the input image
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    cahnger: itk.VotingBinaryIterativeHoleFillingImageFilter
+        filter is updated by default.
+        To not update the instance pecify update=False as kwargs.
+    '''
+    InputType = infer_itk_image_type(image, input_type)
+    filter_ = itk.VotingBinaryIterativeHoleFillingImageFilter[InputType].New()
+
+    _ = filter_.SetInput(image)
+    _ = filter_.SetMajorityThreshold(majority_threshold)
+    _ = filter_.SetMaximumNumberOfIterations(max_number_of_iterations)
+    _ = filter_.SetForegroundValue(foreground_value)
+    _ = filter_.SetBackgroundValue(background_value)
+    _ = filter_.SetRadius(radius)
+
+    return filter_

@@ -33,6 +33,7 @@ from IPT.itk_wrapping import itk_connected_components
 from IPT.itk_wrapping import itk_relabel_components
 from IPT.itk_wrapping import itk_extract
 from IPT.itk_wrapping import itk_change_information_from_reference
+from IPT.itk_wrapping import itk_voting_binary_iterative_hole_filling
 # TODO test me
 from IPT.itk_wrapping import itk_label_overlap_measures
 from IPT.itk_wrapping import itk_hausdorff_distance
@@ -967,3 +968,69 @@ def test_itk_change_information_from_reference_init(image,
     assert filter_.GetChangeRegion() is change_region
     assert filter_.GetUseReferenceImage() is True
     assert filter_.GetCenterImage() is False
+
+
+@given(cst.random_image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_itk_voting_binary_iterative_hole_filling_default(image):
+    '''
+    Given:
+        - random input image
+    Then:
+        - instantiate itk_voting_binary_iterative_hole_filling with
+         default arguments and do not update
+    Assert:
+        - correct filter initialization
+    '''
+
+    filter_ = itk_voting_binary_iterative_hole_filling(image, update=False)
+
+    assert filter_.GetMajorityThreshold() == 1
+    assert filter_.GetMaximumNumberOfIterations() == 10
+    assert filter_.GetForegroundValue() == 1
+    assert filter_.GetBackgroundValue() == 0
+    assert filter_.GetRadius() == [1, 1, 1]
+
+
+@given(cst.random_image_strategy(), # input image
+       st.integers(1, 5), # radius
+       st.integers(1, 25), # number of iteratons
+       st.integers(1, 5), # majority threshold
+       st.integers(10, 255), # foreground value
+       st.integers(0, 9) # background
+       )
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_itk_voting_binary_iterative_hole_filling_init(
+                                                       image,
+                                                       radius,
+                                                       max_number_of_iterations,
+                                                       majority_threshold,
+                                                       foreground_value,
+                                                       background_value):
+    '''
+    Given:
+        - random input image
+        - random input arguments
+    Then:
+        - instantiate itk_voting_binary_iterative_hole_filling with
+          custom arguments
+    Assert:
+        - correct filter initialization
+    '''
+
+    filter_ = itk_voting_binary_iterative_hole_filling(
+                                                       image=image,
+                                                       radius=radius,
+                                                       max_number_of_iterations=max_number_of_iterations,
+                                                       majority_threshold=majority_threshold,
+                                                       foreground_value=foreground_value,
+                                                       background_value=background_value,
+                                                       update=False)
+
+    assert filter_.GetMajorityThreshold() == majority_threshold
+    assert filter_.GetMaximumNumberOfIterations() == max_number_of_iterations
+    assert filter_.GetForegroundValue() == foreground_value
+    assert filter_.GetBackgroundValue() == background_value
+    assert filter_.GetRadius() == [radius, radius, radius]
