@@ -10,8 +10,6 @@ from hypothesis import HealthCheck as HC
 
 import strategies as cst  # testing strategies
 
-from IPT.utils import itk_constant_image_from_reference
-
 from IPT.io import itk_image_file_reader
 from IPT.io import itk_image_file_writer
 
