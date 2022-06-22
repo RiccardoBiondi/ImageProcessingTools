@@ -19,7 +19,7 @@ text_strategy = st.text(alphabet=legitimate_chars, min_size=1,
 
 medical_image_format = ['nrrd', 'nii']
 pixel_types = [itk.UC, itk.SS]
-
+itk_types = [itk.UC, itk.UC, itk.SS, itk.F, itk.D]
 
 @st.composite
 def random_image_strategy(draw):

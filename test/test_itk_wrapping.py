@@ -34,6 +34,7 @@ from IPT.itk_wrapping import itk_relabel_components
 from IPT.itk_wrapping import itk_extract
 from IPT.itk_wrapping import itk_change_information_from_reference
 from IPT.itk_wrapping import itk_voting_binary_iterative_hole_filling
+from IPT.itk_wrapping import itk_cast
 # TODO test me
 from IPT.itk_wrapping import itk_label_overlap_measures
 from IPT.itk_wrapping import itk_hausdorff_distance
@@ -1034,3 +1035,23 @@ def test_itk_voting_binary_iterative_hole_filling_init(
     assert filter_.GetForegroundValue() == foreground_value
     assert filter_.GetBackgroundValue() == background_value
     assert filter_.GetRadius() == [radius, radius, radius]
+
+
+@given(cst.random_image_strategy(), st.sampled_from(cst.itk_types))
+def test_itk_cast(image, new_type):
+    '''
+    Given:
+        - random image
+        - new image type
+    Then:
+        - cast the image to the new type with itk_cast
+    Assert:
+        - correct casting: PixelType is new_type
+        - image dimension is preserved
+    '''
+    filter_ = itk_cast(image, new_type=new_type)
+
+    casted_type, new_dimension = itk.template(filter_.GetOutput())[1]
+
+    assert casted_type == new_type
+    assert new_dimension == 3

@@ -20,7 +20,7 @@ __all__ = ['itk_add', 'itk_subtract', 'itk_multiply', 'itk_invert_intensity',
            'itk_label_overlap_measures', 'itk_hausdorff_distance',
            'itk_hessian_recursive_gaussian', 'itk_symmetric_eigen_analysis',
            'itk_change_information_from_reference',
-           'itk_voting_binary_iterative_hole_filling']
+           'itk_voting_binary_iterative_hole_filling', 'itk_cast']
 
 #
 # Aritmetic Operators
@@ -1249,3 +1249,17 @@ def itk_voting_binary_iterative_hole_filling(image,
     _ = filter_.SetRadius(radius)
 
     return filter_
+
+
+@update
+def itk_cast(image, new_type=itk.UC, **kwargs):
+    '''
+    '''
+    pixel_type, dimension = itk.template(image)[1]
+    InputType = itk.Image[pixel_type, dimension]
+    OutputType = itk.Image[new_type, dimension]
+
+    cast = itk.CastImageFilter[InputType, OutputType].New()
+    _ = cast.SetInput(image)
+
+    return cast
