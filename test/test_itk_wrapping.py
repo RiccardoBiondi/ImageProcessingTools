@@ -242,6 +242,7 @@ def test_label_statistics(image, lower, upper):
 
     mask_a = itk.GetArrayFromImage(mask.GetOutput())
     image_a = itk.GetArrayFromImage(image)
+    image_a = image_a.astype(np.float32) 
 
     assert np.isclose(stats.GetMean(1), np.mean(image_a[mask_a==1]), atol=1e-3)
     assert np.isclose(stats.GetMaximum(1), np.max(image_a[mask_a==1]), atol=1e-3)
