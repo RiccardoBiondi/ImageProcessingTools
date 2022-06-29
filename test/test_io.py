@@ -5,6 +5,7 @@ import os
 import itk
 import numpy as np
 ##import hypothesis.strategies as st
+import pytest
 from hypothesis import given, settings
 from hypothesis import HealthCheck as HC
 
@@ -22,7 +23,7 @@ __email__ = ['riccardo.biondi7@unibo.it']
 @given(cst.path2image_strategy(), cst.random_image_strategy())
 @settings(max_examples=20, deadline=None,
           suppress_health_check=(HC.too_slow, ))
-def test_read_and_write_image_file(filename, image):
+def test_write_and_read_image_file(filename, image):
     '''
     Given:
         - valid filename
@@ -53,3 +54,20 @@ def test_read_and_write_image_file(filename, image):
     assert out.GetSpacing() == image.GetSpacing()
     assert out.GetOrigin() == image.GetOrigin()
     assert out.GetDirection() == image.GetDirection()
+
+
+@given(cst.path2image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_read_image_file_raise_value_error(filename):
+    '''
+    Given:
+        - Path to a non existing image
+    Then:
+        - init and update an image reader
+    Assert:
+        - raise value error
+    '''
+
+    with pytest.raises(ValueError):
+        _ = itk_image_file_reader(filename, itk.Image[itk.UC, 3])

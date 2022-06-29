@@ -1254,6 +1254,22 @@ def itk_voting_binary_iterative_hole_filling(image,
 @update
 def itk_cast(image, new_type=itk.UC, **kwargs):
     '''
+    Cast image voxel type to new_type. Preserve image dimensions
+
+    Parameters
+    ----------
+    image: itk.Image
+        Image to cast
+    new_type: itk voxel type (i.e. itk.UC)
+        new voxel type
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    cast: itk.CastImageFilter
+        filter is updated by default.
+        To not update the instance pecify update=False as kwargs.
     '''
     pixel_type, dimension = itk.template(image)[1]
     InputType = itk.Image[pixel_type, dimension]

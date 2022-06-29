@@ -90,7 +90,7 @@ if not VERSION:
         exec(fp.read(), about)
 
 else:
-  about['__version__'] = VERSION
+    about['__version__'] = VERSION
 
 # parse version variables and add them to command line as definitions
 Version = about['__version__'].split('.')
@@ -119,5 +119,5 @@ setup(
         "Operating System :: OS Independent"
     ],
     python_requires='>=3.5',
-    license = 'MIT'
+    license='MIT'
 )
