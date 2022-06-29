@@ -13,9 +13,9 @@ jobs:
     name: ${{matrix.cfg}}
     strategy:
       matrix:
-         cfg: [windows-latest, windows-2016]
+         cfg: [windows-latest, windows-2019]
          python-version: [3.6, 3.7, 3.8, 3.9]
-            
+
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -31,7 +31,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         python -m pip install -r requirements.txt
-        
+
     - name: Install Image Processing Tools
       run: |
         python setup.py develop --user

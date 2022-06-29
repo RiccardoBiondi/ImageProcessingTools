@@ -40,9 +40,7 @@ def itk_image_file_reader(filename: str, image_type: itk.Image, **kwargs):
 
     else:
         logging.error(f'The specified path: {filename} does not exists')
-
-        return None
-
+        raise ValueError(f'The specified path: {filename} does not exists')
 
 @update
 def itk_image_file_writer(filename: str, image: itk.Image,
