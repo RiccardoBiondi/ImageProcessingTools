@@ -329,13 +329,17 @@ def itk_gaussian_normalization(image, mask, label=1,
 
     Return
     ------
+
+    normalized: itk.ShiftScaleImageFilter
+        Filter with the image normalized according to the mean and standard
+        deviation computed inside the specified mask.  As default the instance
+        is updated. To not update the instance pecify update=False as kwargs.
     '''
 
-    # TODO imporve documentation
     logging.debug(f'Running Gaussian Normalization. ROI label={label}')
 
     stats = itk_label_statistics(image, mask,
-                                 input_type, update=kwargs.get('update', True))
+                                 input_type, update=True)
 
     # TODO add standard values for the case in which the label filter is not
     # updated?? mbah
@@ -497,8 +501,7 @@ def itk_binary_threshold(image, lower_thr=0, upper_thr=0, inside_value=1,
         updated. To not update the instance pecify update=False as kwargs.
     '''
 
-    logging.debug('Binary Threshold: -Upper thr: {} - Lower \
-    thr: {}'.format(upper_thr, lower_thr))
+    logging.debug(f'Binary Threshold: -Upper thr: {upper_thr} - Lower thr: {lower_thr}')
     InputType = infer_itk_image_type(image, input_type)
     OutputType = infer_itk_image_type(image, output_type)
 
@@ -539,7 +542,7 @@ def itk_median(image, radius=1, input_type=None, output_type=None, **kwargs):
         itk.MedianImageFilter instance. As default the instance is
         updated. To not update the instance pecify update=False as kwargs.
     '''
-    logging.debug('Median Filter with Radius : {}'.format(radius))
+    logging.debug(f'Median Filter with Radius : {radius}')
     InputType = infer_itk_image_type(image, input_type)
     OutputType = infer_itk_image_type(image, output_type)
 
@@ -677,8 +680,8 @@ def itk_binary_erode(image, radius=1, foreground_value=1,
     InputType = infer_itk_image_type(image, input_type)
     OutputType = infer_itk_image_type(image, output_type)
 
-    logging.debug('Binary Erosion with a Ball Kernel of \
-                    Dimension {} and Radius: {}'.format(dimension, radius))
+    logging.debug(f'Binary Erosion with a Ball Kernel of \
+                    Dimension {dimension} and Radius: {radius}')
 
     StructuringElementType = itk.FlatStructuringElement[dimension]
     structuring_element = StructuringElementType.Ball(radius)
@@ -729,8 +732,8 @@ def itk_binary_dilate(image, radius=1, foreground_value=1,
     InputType = infer_itk_image_type(image, input_type)
     OutputType = infer_itk_image_type(image, output_type)
 
-    logging.debug('Binary Dilation with a Ball Kernel of \
-                    Dimension {} and Radius: {}'.format(dimension, radius))
+    logging.debug(f'Binary Dilation with a Ball Kernel of \
+                    Dimension {dimension} and Radius: {radius}')
 
     StructuringElementType = itk.FlatStructuringElement[dimension]
     structuring_element = StructuringElementType.Ball(radius)
@@ -783,8 +786,8 @@ def itk_binary_morphological_opening(image, radius=1, foreground_value=1,
     InputType = infer_itk_image_type(image, input_type)
     OutputType = infer_itk_image_type(image, output_type)
 
-    logging.debug('Binary Morphological Opening with a Ball Kernel of \
-                    Dimension {} and Radius: {}'.format(dimension, radius))
+    logging.debug(f'Binary Morphological Opening with a Ball Kernel of \
+                    Dimension {dimension} and Radius: {radius}')
 
     StructuringElementType = itk.FlatStructuringElement[dimension]
     structuring_element = StructuringElementType.Ball(radius)
@@ -833,8 +836,8 @@ def itk_binary_morphological_closing(image, radius=1, foreground_value=1,
     InputType = infer_itk_image_type(image, input_type)
     OutputType = infer_itk_image_type(image, output_type)
 
-    logging.debug('Binary Morphological Closing with a Ball Kernel of \
-                    Dimension {} and Radius: {}'.format(dimension, radius))
+    logging.debug(f'Binary Morphological Closing with a Ball Kernel of \
+                    Dimension {dimension} and Radius: {radius}')
 
     StructuringElementType = itk.FlatStructuringElement[dimension]
     structuring_element = StructuringElementType.Ball(radius)
@@ -982,6 +985,8 @@ def itk_extract(image, region, collapse2submatrix=False,
         To not update the instance pecify update=False as kwargs.
     '''
     # TODO add all the other input options
+    logging.debug(f'Extract image filter: collapse to submatrix: {collapse2submatrix}')
+
     InputType = infer_itk_image_type(image, input_type)
     OutputType = infer_itk_image_type(image, output_type)
 
@@ -1032,6 +1037,8 @@ def itk_label_overlap_measures(source, target,
         itk.LabelOverlapMeasuresImageFilter instance. As default the instance
         is updated. To not update the instance pecify update=False as kwargs.
     '''
+
+    logging.debug(f'Label Overlap Measure')
     InputType = infer_itk_image_type(source, input_type)
 
     measures = itk.LabelOverlapMeasuresImageFilter[InputType].New()
@@ -1046,6 +1053,8 @@ def itk_hausdorff_distance(image1, image2,
                            input1_type=None, input2_type=None, **kwargs):
     '''
     '''
+
+    logging.debug("Hausdorff Distance")
     Input1Type = infer_itk_image_type(image1, input1_type)
     Input2Type = infer_itk_image_type(image2, input2_type)
 
@@ -1196,7 +1205,7 @@ def itk_change_information_from_reference(image,
     _ = changer.SetChangeOrigin(change_origin)
     _ = changer.SetChangeSpacing(change_spacing)
     _ = changer.SetChangeRegion(change_region)
-    _ = changer.SetCenterImage(False)
+    _ = changer.SetCenterImage(True)
 
     return changer
 
@@ -1238,6 +1247,13 @@ def itk_voting_binary_iterative_hole_filling(image,
         filter is updated by default.
         To not update the instance pecify update=False as kwargs.
     '''
+    logging.debug(f'Voting Binary Hole filling: \
+    majority_threshold={majority_threshold},\
+     max_number_of_iterations={max_number_of_iterations},\
+      foreground_value={foreground_value},\
+      background_value={background_value},\
+      radius={radius}')
+
     InputType = infer_itk_image_type(image, input_type)
     filter_ = itk.VotingBinaryIterativeHoleFillingImageFilter[InputType].New()
 
@@ -1271,7 +1287,9 @@ def itk_cast(image, new_type=itk.UC, **kwargs):
         filter is updated by default.
         To not update the instance pecify update=False as kwargs.
     '''
+
     pixel_type, dimension = itk.template(image)[1]
+    logging.debug(f'Casting image from {pixel_type} to {new_type}')
     InputType = itk.Image[pixel_type, dimension]
     OutputType = itk.Image[new_type, dimension]
 
@@ -1279,3 +1297,130 @@ def itk_cast(image, new_type=itk.UC, **kwargs):
     _ = cast.SetInput(image)
 
     return cast
+
+"""
+@update
+def itk_flip_image(
+                    image: itk.Image,
+                    flip_axes: tuple = (True, False),
+                    input_type=None,
+                    **kwargs) -> itk.FlipImageFilter:
+    '''
+    Description...
+
+    Parameters
+    ----------
+    image: itk.Image
+        Image to flip
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    flipped: itk.FlipImageFilter
+        filter is updated by default.
+        To not update the instance pecify update=False as kwargs.
+    '''
+    ImageType = infer_itk_image_type(image, input_type)
+
+    flipped = itk.FlipImageFilter[ImageType].New()
+    _ = flipped.SetInput(image)
+    _ = flipped.SetFlipAxes(flip_axes)
+
+    return flipped
+"""
+
+@update
+def itk_sigmoid(image, alpha=1., beta=0., output_min=0.0, output_max=1., **kwargs):
+    '''
+    Computes the sigmoid function pixel-wise.
+
+    A linear transformation is applied first on the argument of the sigmoid
+    function.
+    :math:`(output_max - output_min) * \\frac{1}{1 - e^{-\\frac{X - \\beta}{\\alpha}}} + output_min`
+
+    '''
+    PixelType, Dimension = itk.template(image)[1]
+    ImageType = itk.Image[PixelType, Dimension]
+
+    SigmoidFilterType = itk.SigmoidImageFilter[ImageType, ImageType].New()
+    sigmoid = SigmoidFilterType.New()
+
+    _ = sigmoid.SetOutputMinimum(output_min)
+    _ = sigmoid.SetOutputMaximum(output_max)
+    _ = sigmoid.SetAlpha(alpha)
+    _ = sigmoid.SetBeta(beta)
+    _ = sigmoid.SetInput(image)
+
+    return sigmoid
+
+
+@update
+def itk_geodesic_active_contour(input_image,
+                                feature_image,
+                                propagation_scaling=1.,
+                                curvature_scaling=1.,
+                                advection_scaling=1.0,
+                                max_RMS_error=0.02,
+                                number_of_iterations=1, **kwargs):
+    '''
+    '''
+    PixelType, Dimension = itk.template(input_image)[1]
+    ImageType = itk.Image[PixelType, Dimension]
+    geodesic_ac = itk.GeodesicActiveContourLevelSetImageFilter[ImageType,
+                                                               ImageType,
+                                                               itk.F].New()
+    _ = geodesic_ac.SetPropagationScaling(propagation_scaling)
+    _ = geodesic_ac.SetCurvatureScaling(curvature_scaling)
+    _ = geodesic_ac.SetAdvectionScaling(advection_scaling)
+    _ = geodesic_ac.SetMaximumRMSError(max_RMS_error)
+    _ = geodesic_ac.SetNumberOfIterations(number_of_iterations)
+    _ = geodesic_ac.SetInput(input_image)
+    _ = geodesic_ac.SetFeatureImage(feature_image)
+
+    return geodesic_ac
+
+
+@update
+def itk_signed_maurer_distance_map(image, inside_positive=False, squared_distance=False, **kwargs):
+
+    PixelType, Dimension = itk.template(image)[1]
+    ImageType = itk.Image[PixelType, Dimension]
+    OutputType = itk.Image[itk.F, Dimension]
+    dist = itk.SignedMaurerDistanceMapImageFilter[ImageType, OutputType].New()
+    _ = dist.SetInput(image)
+    _ = dist.SetInsideIsPositive(inside_positive)
+    _ = dist.SetSquaredDistance(squared_distance)
+
+    return dist
+
+@update
+def itk_image_gradient_magnitude_recursive(image, sigma, **kwargs):
+
+    PixelType, Dimension = itk.template(image)[1]
+    ImageType = itk.Image[PixelType, Dimension]
+
+    gm = itk.GradientMagnitudeRecursiveGaussianImageFilter[ImageType, ImageType].New(
+    )
+    _ = gm.SetInput(image)
+    _ = gm.SetSigma(sigma)
+
+    return gm
+
+#
+# Logical Operations
+#
+
+@update
+def itk_or(image1, image2, input1_type=None, input2_type=None, output_type=None, **kwargs):
+    '''
+    '''
+    Input1Type = infer_itk_image_type(image1, input1_type)
+    Input2Type = infer_itk_image_type(image2, input2_type)
+    OutputType = infer_itk_image_type(image1, output_type)
+
+    or_ = itk.OrImageFilter[Input1Type, Input2Type, OutputType].New()
+    _ = or_.SetInput(0, image1)
+    _ = or_.SetInput(1, image2)
+
+    return or_

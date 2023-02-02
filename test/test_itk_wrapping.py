@@ -41,6 +41,13 @@ from IPT.itk_wrapping import itk_hausdorff_distance
 from IPT.itk_wrapping import itk_hessian_recursive_gaussian
 from IPT.itk_wrapping import itk_symmetric_eigen_analysis
 
+# to test 
+# itk_flip_image
+# itk_sigmoid
+# itk_geodesic_active_contour
+# itk_signed_maurer_distance_map
+# itk_image_gradient_magnitude_recursive
+# itk_or
 
 __author__ = ['Riccardo Biondi']
 __email__ = ['riccardo.biondi7@unibo.it']
@@ -244,10 +251,10 @@ def test_label_statistics(image, lower, upper):
     image_a = itk.GetArrayFromImage(image)
     image_a = image_a.astype(np.float32)
 
-    assert np.isclose(stats.GetMean(1), np.mean(image_a[mask_a==1]), atol=1e-3)
-    assert np.isclose(stats.GetMaximum(1), np.max(image_a[mask_a==1]), atol=1e-3)
-    assert np.isclose(stats.GetMinimum(1), np.min(image_a[mask_a==1]), atol=1e-3)
-    assert np.isclose(stats.GetSigma(1), np.std(image_a[mask_a==1]), atol=1e-2)
+    assert np.isclose(stats.GetMean(1), np.mean(image_a[mask_a == 1]), atol=1e-3)
+    assert np.isclose(stats.GetMaximum(1), np.max(image_a[mask_a == 1]), atol=1e-3)
+    assert np.isclose(stats.GetMinimum(1), np.min(image_a[mask_a == 1]), atol=1e-3)
+    assert np.isclose(stats.GetSigma(1), np.std(image_a[mask_a == 1]), atol=1e-2)
 
 
 @given(cst.random_image_strategy())
@@ -289,7 +296,8 @@ def test_shift_scale_init(image, shift, scale):
     assert np.isclose(filter_.GetScale(), scale)
 
 
-@given(cst.random_image_strategy(), st.integers(1, 7),st.floats(-4., 4), st.floats(.1, 4.))
+@given(cst.random_image_strategy(), st.integers(1, 7),
+       st.floats(-4., 4), st.floats(.1, 4.))
 @settings(max_examples=20, deadline=None,
           suppress_health_check=(HC.too_slow, ))
 def test_shift_scale(image, value, shift, scale):
@@ -582,7 +590,6 @@ def test_median_filter_on_salt_and_pepper(image, radius):
     assert np.unique(res) == [0]
 
 
-
 @given(cst.random_image_strategy(), st.floats(.1, 2.5), st.booleans())
 @settings(max_examples=20, deadline=None,
           suppress_health_check=(HC.too_slow, ))
@@ -599,10 +606,12 @@ def test_smoothing_gaussian_initialization(image, sigma,
         - correct parameters intialization
     '''
 
-    filter_ = itk_smoothing_recursive_gaussian(image,
+    filter_ = itk_smoothing_recursive_gaussian(
+                                                image,
                                                 sigma,
                                                 normalize_across_scale,
-                                                update=False)
+                                                update=False
+                                                )
 
     assert filter_.GetSigma() == sigma
     assert filter_.GetNormalizeAcrossScale() == normalize_across_scale
@@ -1036,6 +1045,32 @@ def test_itk_voting_binary_iterative_hole_filling_init(
     assert filter_.GetForegroundValue() == foreground_value
     assert filter_.GetBackgroundValue() == background_value
     assert filter_.GetRadius() == [radius, radius, radius]
+
+
+@given(cst.random_image_strategy(), st.integers(1, 5), st.integers(1, 15), st.integers(1, 5))
+def test_itk_voting_binary_iterative_hole_filling_on_salt_and_pepper(const, radius, n_iter, majority_threshold):
+    '''
+    Given:
+        - Salt and Pepper image
+        - Random parameters to init the filter
+    Then:
+        - fill the holes of the image
+    Assert:
+        - result image has got more white voxels than the initial one
+    '''
+    
+    salt_and_pepper = itk_salt_and_pepper_noise(const, salt_value=1,
+                                    pepper_value=0, prob=.1)
+
+    filler = itk_voting_binary_iterative_hole_filling(salt_and_pepper.GetOutput(),
+                                                      radius=radius,
+                                                      max_number_of_iterations=n_iter,
+                                                      majority_threshold=majority_threshold)
+
+    inital_image_white_voxels = np.sum(itk.GetArrayFromImage(salt_and_pepper.GetOutput()))
+    final_image_white_voxels = np.sum(itk.GetArrayFromImage(filler.GetOutput()))
+
+    assert final_image_white_voxels > inital_image_white_voxels
 
 
 @given(cst.random_image_strategy(), st.sampled_from(cst.itk_types))

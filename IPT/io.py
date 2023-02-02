@@ -3,11 +3,21 @@ import itk
 import logging
 
 from IPT.decorators import update
+import IPT.utils as iptu
+from IPT.utils import SeriesSlectionRules
+
 
 __author__ = ['Riccardo Biondi']
 __email__ = ['riccardo.biondi7@unibo.it']
 
 __all__ = ['itk_image_file_reader', 'itk_image_file_writer']
+
+
+SeriesSelectionRuleDictionary = {
+                        'all': iptu.keep_all_series_uid,
+                        'largest': iptu.keep_largest_series_uid,
+                        'smallest': iptu.keep_smallest_series_uid
+                        }
 
 
 @update
@@ -42,20 +52,19 @@ def itk_image_file_reader(filename: str, image_type: itk.Image, **kwargs):
         logging.error(f'The specified path: {filename} does not exists')
         raise ValueError(f'The specified path: {filename} does not exists')
 
+
 @update
 def itk_image_file_writer(filename: str, image: itk.Image,
                           create=False, **kwargs):
     '''
     Create a New instance of itk.ImageWriter, The writer is only initialized
     but not updated. The writer type is inferred from the image
-
     Parameters
     ----------
     filename : str
         output filename(i.e. ./path/to/my_image.nii)
     image: itk.Image
         image to write.
-
     Return
     ------
     writer: itk.ImageWriter
