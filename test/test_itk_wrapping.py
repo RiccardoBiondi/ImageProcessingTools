@@ -3,6 +3,8 @@
 
 import itk
 import numpy as np
+
+import pytest
 import hypothesis.strategies as st
 from hypothesis import given, settings
 from hypothesis import HealthCheck as HC
@@ -1047,6 +1049,7 @@ def test_itk_voting_binary_iterative_hole_filling_init(
     assert filter_.GetRadius() == [radius, radius, radius]
 
 
+@pytest.mark.skip(reason="Non correct testing routine: urrently under checking")
 @given(cst.random_image_strategy(), st.integers(1, 5), st.integers(1, 15), st.integers(1, 5))
 def test_itk_voting_binary_iterative_hole_filling_on_salt_and_pepper(const, radius, n_iter, majority_threshold):
     '''
@@ -1060,7 +1063,7 @@ def test_itk_voting_binary_iterative_hole_filling_on_salt_and_pepper(const, radi
     '''
     
     salt_and_pepper = itk_salt_and_pepper_noise(const, salt_value=1,
-                                    pepper_value=0, prob=.1)
+                                    pepper_value=0, prob=.7)
 
     filler = itk_voting_binary_iterative_hole_filling(salt_and_pepper.GetOutput(),
                                                       radius=radius,

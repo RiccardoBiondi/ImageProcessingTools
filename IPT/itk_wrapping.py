@@ -2,6 +2,9 @@ import itk
 import logging
 # import numpy as np
 
+from typing import Optional, List, NewType
+
+
 from IPT.decorators import update
 from IPT.utils import infer_itk_image_type
 
@@ -22,14 +25,20 @@ __all__ = ['itk_add', 'itk_subtract', 'itk_multiply', 'itk_invert_intensity',
            'itk_change_information_from_reference',
            'itk_voting_binary_iterative_hole_filling', 'itk_cast']
 
+Image = NewType('Image', itk.Image)
+
 #
 # Aritmetic Operators
 #
 
 
 @update
-def itk_add(image1, image2, input1_type=None,
-            input2_type=None, output_type=None, **kwargs):
+def itk_add(
+            image1: Image, image2: Image,
+            input1_type: Optional[Image] = None,
+            input2_type: Optional[Image] = None,
+            output_type: Optional[Image] = None, **kwargs
+            ) -> itk.AddImageFilter:
     """
     Add two itk images. Images must heve the same size and physical space.
 
@@ -68,8 +77,12 @@ def itk_add(image1, image2, input1_type=None,
 
 
 @update
-def itk_subtract(image1, image2, input1_type=None,
-                 input2_type=None, output_type=None, **kwargs):
+def itk_subtract(
+                image1: Image, image2: Image,
+                input1_type: Optional[Image] = None,
+                input2_type: Optional[Image] = None,
+                output_type: Optional[Image] = None, **kwargs
+                ) -> itk.SubtractImageFilter:
     '''
     Subtract two itk images. Images must heve the same size and physical space.
 
@@ -108,8 +121,12 @@ def itk_subtract(image1, image2, input1_type=None,
 
 
 @update
-def itk_multiply(image1, image2, input1_type=None,
-                 input2_type=None, output_type=None, **kwargs):
+def itk_multiply(
+                 image1: Image, image2: Image,
+                 input1_type: Optional[Image] = None,
+                 input2_type: Optional[Image] = None,
+                 output_type: Optional[Image] = None, **kwargs
+                 ) -> itk.MultiplyImageFilter:
     '''
     Voxel-Wise multiplication of two images.
 
@@ -152,8 +169,12 @@ def itk_multiply(image1, image2, input1_type=None,
 
 
 @update
-def itk_invert_intensity(image, maximum=1,
-                         input_type=None, output_type=None, **kwargs):
+def itk_invert_intensity(
+                         image: Image, 
+                         maximum: int = 1,
+                         input_type: Optional[Image] = None,
+                         output_type: Optional[Image] = None, **kwargs
+                         ):
     '''
     Invert the intensity of an image.
     InvertIntensityImageFilter inverts intensity of pixels by subtracting pixel
@@ -198,9 +219,12 @@ def itk_invert_intensity(image, maximum=1,
 # Statistical Operations
 #
 @update
-def itk_maximum(image1, image2,
-                image1_type=None, image2_type=None, output_type=None,
-                **kwargs):
+def itk_maximum(
+                image1: Image, image2: Image,
+                image1_type: Optional[Image] = None,
+                image2_type: Optional[Image] = None,
+                output_type: Optional[Image] = None, **kwargs
+                ) -> itk.MaximumImageFilter:
     '''
     Implements a pixel-wise operator Max(a,b) between two images.
 
@@ -274,8 +298,13 @@ def itk_label_statistics(image, labelmap, input_type=None, **kwargs):
 
 
 @update
-def itk_shift_scale(image, shift=0., scale=1.,
-                    input_type=None, output_type=None, **kwargs):
+def itk_shift_scale(
+                    image: Image,
+                    shift: float = 0.,
+                    scale: float = 1.,
+                    input_type: Optional[Image] = None,
+                    output_type: Optional[Image] = None,
+                    **kwargs) -> itk.ShiftScaleImageFilter:
     '''
     Shift and scale the pixels in an image.
 
@@ -310,8 +339,13 @@ def itk_shift_scale(image, shift=0., scale=1.,
 
 
 @update
-def itk_gaussian_normalization(image, mask, label=1,
-                               input_type=None, output_type=None, **kwargs):
+def itk_gaussian_normalization(
+                               image: Image,
+                               mask: Image,
+                               label: int = 1,
+                               input_type: Optional[Image] = None,
+                               output_type: Optional[Image] = None,
+                               **kwargs) -> itk.ShiftScaleImageFilter:
     '''
     Normalize the datata according to mean and standard deviation of the
     voxels inside the specified mask image
@@ -333,7 +367,7 @@ def itk_gaussian_normalization(image, mask, label=1,
     normalized: itk.ShiftScaleImageFilter
         Filter with the image normalized according to the mean and standard
         deviation computed inside the specified mask.  As default the instance
-        is updated. To not update the instance pecify update=False as kwargs.
+        is updated. To not update the instance specify update=False as kwargs.
     '''
 
     logging.debug(f'Running Gaussian Normalization. ROI label={label}')
@@ -408,12 +442,12 @@ def itk_mask(image, mask, masking_value=0, outside_value=0,
 
 
 @update
-def itk_threshold(image,
-                  upper_thr=None,
-                  lower_thr=None,
-                  outside_value=0,
-                  input_type=None,
-                  **kwargs):
+def itk_threshold(image: Image,
+                  upper_thr: Optional[float] = None, # TODO: change the type to pixel type
+                  lower_thr: Optional[float] = None, # TODO: change the type to pixel type
+                  outside_value: float = 0, # TODO: change the type to pixel type
+                  input_type: Optional[Image] = None,
+                  **kwargs) -> itk.ThresholdImageFilter:
     '''
     Apply a threshold on the image. If only lower_thr is specified, the image
     is thresholded below this value. If only upper_thr is specified, the image
@@ -468,9 +502,15 @@ def itk_threshold(image,
 
 
 @update
-def itk_binary_threshold(image, lower_thr=0, upper_thr=0, inside_value=1,
-                         outside_value=0, input_type=None, output_type=None,
-                         **kwargs):
+def itk_binary_threshold(
+                        image,
+                        lower_thr=0,
+                        upper_thr=0,
+                        inside_value=1,
+                         outside_value=0,
+                         input_type=None,
+                         output_type=None,
+                         **kwargs) -> itk.BinaryThresholdImageFilter:
     '''
     Apply a threshold in a specified interval and return a binary image. The
     values outside the inteval are setted to outside_value, the ones inside to
@@ -584,7 +624,7 @@ def itk_smoothing_recursive_gaussian(image,
     As default the instance is updated.
     To not update the instance pecify update=False as kwargs.
     '''
-    logging.debug(f'Smoothing Recursive Gaussian Filter: -sigma: {sigma} -normalize_across_scale: {normalize_across_scale}')    # Retrive image pixel type and dimension
+    logging.debug(f'Smoothing Recursive Gaussian Filter: -sigma: {sigma} -normalize_across_scale: {normalize_across_scale}') 
 
     InputType = infer_itk_image_type(image, input_type)
     OutputType = infer_itk_image_type(image, output_type)
@@ -1052,6 +1092,7 @@ def itk_label_overlap_measures(source, target,
 def itk_hausdorff_distance(image1, image2,
                            input1_type=None, input2_type=None, **kwargs):
     '''
+    Compute the hausdorff distance filteer between two images
     '''
 
     logging.debug("Hausdorff Distance")
@@ -1199,13 +1240,13 @@ def itk_change_information_from_reference(image,
     _ = reference_image.Update()
     changer = itk.ChangeInformationImageFilter[InputType].New()
     _ = changer.SetUseReferenceImage(True)
+    _ = changer.SetCenterImage(False)
     _ = changer.SetInput(image)
     _ = changer.SetReferenceImage(reference_image.GetOutput())
     _ = changer.SetChangeDirection(change_direction)
     _ = changer.SetChangeOrigin(change_origin)
     _ = changer.SetChangeSpacing(change_spacing)
     _ = changer.SetChangeRegion(change_region)
-    _ = changer.SetCenterImage(True)
 
     return changer
 
