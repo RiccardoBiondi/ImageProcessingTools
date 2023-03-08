@@ -863,7 +863,7 @@ def test_relabel_components_initialization(image,
 
     relabeler = itk_relabel_components(image,
                                        sort_by_object_size=sort_by_object_size,
-                                       minimum_object_size=np.float(minimum_object_size),
+                                       minimum_object_size=np.float64(minimum_object_size),
                                        number_of_object_to_print=number_of_object_to_print,
                                        update=False)
 
