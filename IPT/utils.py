@@ -1,9 +1,26 @@
 import itk
 import logging
+from enum import Enum
 from IPT.decorators import update
 
 __author__ = ['Riccardo Biondi']
 __email__ = ['riccardo.biondi7@unibo.it']
+
+
+class SeriesSelectionRules(Enum):
+    All = 'all'
+    Largest = 'largest'
+    Smallest = 'smallest'
+
+
+def keep_largest_series_uid() -> list:
+    pass
+
+def keep_all_series_uid() -> list:
+    pass
+
+def keep_smallest_series_uid() -> list:
+    pass
 
 
 def infer_itk_image_type(image, desidered_type=None):

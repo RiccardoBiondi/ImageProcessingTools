@@ -4,7 +4,7 @@ import logging
 
 from IPT.decorators import update
 import IPT.utils as iptu
-from IPT.utils import SeriesSlectionRules
+from IPT.utils import SeriesSelectionRules
 
 
 __author__ = ['Riccardo Biondi']
