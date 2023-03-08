@@ -47,7 +47,7 @@ IPT is not an organic library for image processing like ITK, PIL or OpenCV.
 
 ## Prerequisites
 
-Supported python versions: ![Python version](https://img.shields.io/badge/python-3.6.*|3.7.*|3.8.*|3.9.*-blue.svg)
+Supported python versions: ![Python version](https://img.shields.io/badge/python-3.8.*|3.9.*|3.10.*|3.11.*-blue.svg). Also vesion 3.6 and 3.7  are supperted but not tested.
 
 To run the tests you need to install ```PyTest``` and ```Hypothesis```.
 Installation instructions are available at: [PyTest](https://docs.pytest.org/en/6.2.x/getting-started.html), [Hypothesis](https://docs.pytest.org/en/6.2.x/getting-started.html)

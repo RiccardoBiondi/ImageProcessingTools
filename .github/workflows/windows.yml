@@ -13,8 +13,8 @@ jobs:
     name: ${{matrix.cfg}}
     strategy:
       matrix:
-         cfg: [windows-latest, windows-2019]
-         python-version: [3.6, 3.7, 3.8, 3.9]
+         cfg: [windows-latest]
+         python-version: [3.8, 3.9, '3.10', '3.11']
 
     steps:
     - name: Checkout
