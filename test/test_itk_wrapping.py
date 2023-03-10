@@ -37,6 +37,8 @@ from IPT.itk_wrapping import itk_extract
 from IPT.itk_wrapping import itk_change_information_from_reference
 from IPT.itk_wrapping import itk_voting_binary_iterative_hole_filling
 from IPT.itk_wrapping import itk_cast
+from IPT.itk_wrapping import itk_unsharp_mask
+
 # TODO test me
 from IPT.itk_wrapping import itk_label_overlap_measures
 from IPT.itk_wrapping import itk_hausdorff_distance
@@ -1094,3 +1096,69 @@ def test_itk_cast(image, new_type):
 
     assert casted_type == new_type
     assert new_dimension == 3
+
+
+#
+# Test the itk unsharp mask filter
+#
+
+
+
+@given(cst.random_image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_itk_unsharp_mask_default(image):
+    '''
+    Given:
+        - random input image
+
+    Then:
+        - instantiate itk_unsharp_mask with
+         default arguments and do not update
+    Assert:
+        - correct filter initialization
+    '''
+
+    filter_ = itk_unsharp_mask(image, update=False)
+
+    assert filter_.GetSigmas() == 1.0
+    assert filter_.GetAmount() == 0.5
+    assert filter_.GetThreshold() == 0
+    assert filter_.GetClamp() is True
+
+
+
+@given(cst.random_image_strategy(),
+       st.floats(0., 10.),
+       st.floats(0.1, 2.),
+       st.floats(0., 10.),
+       st.booleans())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_itk_unsharp_mask_init(image, sigma, amount, threshold, clamp):
+    '''
+    Given:
+        - random input image
+        - random sigma
+        - random amount
+        - random threshold
+        - random clamp
+    Then:
+        - instantiate itk_unsharp_mask with
+         the provided arguments and do not update
+    Assert:
+        - correct filter initialization
+    '''
+
+    filter_ = itk_unsharp_mask(
+                                image,
+                                sigmas=sigma,
+                                amount=amount,
+                                threshold=threshold,
+                                clamp=clamp,
+                                update=False)
+
+    assert np.all(np.isclose(filter_.GetSigmas(), sigma))
+    assert np.all(np.isclose(filter_.GetAmount(), amount))
+    assert np.all(np.isclose(filter_.GetThreshold(), threshold))
+    assert filter_.GetClamp() is clamp

@@ -388,6 +388,53 @@ def itk_gaussian_normalization(
     return normalized
 
 
+
+@update
+def itk_unsharp_mask(
+                    image: Image,
+                    sigmas: float = 1.0,
+                    amount: float = .5,
+                    threshold: float = 0.,
+                    clamp: bool = True,
+                    input_type: Optional[Image] = None,
+                    output_type: Optional[Image] = None,
+                    **kwargs) -> itk.UnsharpMaskImageFilter:
+
+    '''
+    Unsharp mask edge enhancement filter.
+    This filter subtracts a smoothed version of the image from the image
+    to achieve the edge enhancing effect.
+
+    Parameters
+    ----------
+    image: itk.Image
+        image to unsharp
+
+
+    Return
+    ------
+
+    unsharped: itk.UnsharpMaskImageFilter
+            Filter with the edge enhanced by the unsharp masking.
+            As default the instance is updated. To not update the
+            instance specify update=False as kwargs.
+    '''
+
+    logging.debug(f'Running Unsharp Masking.')
+
+    InputType = infer_itk_image_type(image, input_type)
+    OutputType = infer_itk_image_type(image, output_type)
+
+    unsharped = itk.UnsharpMaskImageFilter[InputType, OutputType].New()
+    _ = unsharped.SetInput(image)
+    _ = unsharped.SetSigmas(sigmas)
+    _ = unsharped.SetAmount(amount)
+    _ = unsharped.SetThreshold(threshold)
+    _ = unsharped.SetClamp(clamp)
+
+
+    return unsharped
+
 #
 # Image Functions
 #
@@ -1465,3 +1512,5 @@ def itk_or(image1, image2, input1_type=None, input2_type=None, output_type=None,
     _ = or_.SetInput(1, image2)
 
     return or_
+
+
