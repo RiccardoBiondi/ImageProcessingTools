@@ -1514,3 +1514,40 @@ def itk_or(image1, image2, input1_type=None, input2_type=None, output_type=None,
     return or_
 
 
+# Image Slicing
+
+@update
+def itk_slice_by_slice(image,
+                       pipeline,
+                       dimension=2,
+                       input_type=None,
+                       output_type=None,
+                       **kwargs) -> itk.SliceBySliceImageFilter:
+    '''
+    Let the user apply a filter or a pipeline of filters on the slices
+    of an image
+
+    Parameters
+    -----------
+    image: itk.Image
+        image to apply the pipline slice by slice
+    pipeline:
+        pipeline to apply
+    dimension: int
+        dimension along which the slices are extracted
+
+    input_type : itk.Image type (i.e.itk.Image[itk.UC, 3])
+         input image type. If not specified it is inferred from the input image
+    output_type : itk.Image type (i.e.itk.Image[itk.UC, 3])
+         output image type. If not specified it is iferred from the input image
+    '''
+
+    InputType = infer_itk_image_type(image, input_type)
+    OutputType = infer_itk_image_type(image, output_type)
+
+    filter_ = itk.SliceBySliceImageFilter[InputType, OutputType].New()
+    _ = filter_.SetInput(image)
+    _ = filter_.SetFilter(pipeline)
+    _ = filter_.SetDimension(dimension)
+
+    return filter_

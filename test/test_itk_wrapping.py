@@ -38,6 +38,7 @@ from IPT.itk_wrapping import itk_change_information_from_reference
 from IPT.itk_wrapping import itk_voting_binary_iterative_hole_filling
 from IPT.itk_wrapping import itk_cast
 from IPT.itk_wrapping import itk_unsharp_mask
+from IPT.itk_wrapping import itk_slice_by_slice
 
 # TODO test me
 from IPT.itk_wrapping import itk_label_overlap_measures
@@ -1162,3 +1163,27 @@ def test_itk_unsharp_mask_init(image, sigma, amount, threshold, clamp):
     assert np.all(np.isclose(filter_.GetAmount(), amount))
     assert np.all(np.isclose(filter_.GetThreshold(), threshold))
     assert filter_.GetClamp() is clamp
+
+
+#
+# Test slice by sluice filter
+
+@given(cst.random_image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_itk_slice_by_slice_default(image):
+    '''
+    Given:
+        - random image
+        - simple pipeline
+    Then:
+        - instantiate itk_slice_by_slice with the default argument and 
+        do no update
+    Assert:
+        - correct default filter initialization   
+    '''
+    PixelType, _ = itk.template(image)[1]
+    pipeline = itk.BinaryThresholdImageFilter[itk.Image[PixelType, 2], itk.Image[PixelType, 2]].New()
+    filter_ = itk_slice_by_slice(image=image, pipeline=pipeline, update=False)
+
+    assert filter_.GetDimension() == 2
