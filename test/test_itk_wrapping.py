@@ -18,6 +18,7 @@ from IPT.itk_wrapping import itk_subtract
 from IPT.itk_wrapping import itk_multiply
 from IPT.itk_wrapping import itk_invert_intensity
 from IPT.itk_wrapping import itk_maximum
+from IPT.itk_wrapping import itk_abs
 from IPT.itk_wrapping import itk_label_statistics
 from IPT.itk_wrapping import itk_shift_scale
 from IPT.itk_wrapping import itk_gaussian_normalization
@@ -229,7 +230,52 @@ def test_maximum(image, const1, const2):
     assert np.unique(res) == [max(const1, const2)]
 
 
-@given(cst.random_image_strategy(), st.integers(12, 25), st.integers(50, 75))
+@given(cst.random_image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_abs_default(image):
+    '''
+    Test correct filter initialization
+
+    Given:
+        - random image
+    Then:
+        - init the abs image filter
+        - not update the filter
+
+    Assert:
+        - itk.AbsImageFilter is returned
+        - correct filter initialization
+    '''
+
+    abs_filter = itk_abs(image, update=False)
+    
+    assert isinstance(abs_filter, itk.AbsImageFilter)
+    assert abs_filter.GetInput() == image
+
+
+@given(cst.random_image_strategy())
+@settings(max_examples=20, deadline=None,
+          suppress_health_check=(HC.too_slow, ))
+def test_abs_non_negative(image):
+    '''
+    Test correct filter updating
+
+    Given:
+        - random image
+    Then:
+        - init and update the itk_abs filter
+    Assert:
+        - no negative voxel is still present
+    '''
+
+    abs_filter = itk_abs(image)
+
+    result_array = itk.GetArrayFromImage(abs_filter.GetOutput())
+    
+    assert ~np.any(result_array < 0.)
+
+@given(cst.random_image_strategy())
 @settings(max_examples=20, deadline=None,
           suppress_health_check=(HC.too_slow, ))
 def test_label_statistics(image, lower, upper):

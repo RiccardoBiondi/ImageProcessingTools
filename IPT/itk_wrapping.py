@@ -13,7 +13,7 @@ __author__ = ['Riccardo Biondi']
 __email__ = ['riccardo.biondi7@unibo.it']
 
 __all__ = ['itk_add', 'itk_subtract', 'itk_multiply', 'itk_invert_intensity',
-           'itk_maximum', 'itk_label_statistics', 'itk_shift_scale',
+           'itk_maximum', 'itk_abs', 'itk_label_statistics', 'itk_shift_scale',
            'itk_gaussian_normalization', 'itk_mask',
            'itk_salt_and_pepper_noise', 'itk_threshold', 'itk_binary_threshold',
            'itk_median', 'itk_smoothing_recursive_gaussian', 'itk_binary_erode',
@@ -263,6 +263,39 @@ def itk_maximum(
 
     return max_
 
+
+@update
+def itk_abs(image, image_type=None, output_type=None, **kwargs):
+    '''
+    Compute the absolute value for each voxel.
+
+    Parameters
+    ----------
+    image: itk.Image
+        image to apply filter to
+    
+    input_type : itk.Image type (i.e. itk.Image[itk.UC, 2])
+         input type. If not specified it is inferred from the input image
+
+    output_type : itk.Image type (i.e. itk.Image[itk.UC, 2])
+         output type. If not specified it is iferred from the input image
+    kwargs:
+        keyword arguments to control the behaviour of deorators
+
+    Return
+    ------
+    abs_filter : itk.AbsImageFilter
+        itk.AbsImageFilter instance. As default the instance is
+        updated. To not update the instance pecify update=False as kwargs.
+    '''
+
+    InputType = infer_itk_image_type(image, image_type)
+    OutputType = infer_itk_image_type(image, output_type)
+
+    abs_filter = itk.AbsImageFilter[InputType, OutputType].New()
+    _ = abs_filter.SetInput(image)
+
+    return abs_filter
 
 @update
 def itk_label_statistics(image, labelmap, input_type=None, **kwargs):
